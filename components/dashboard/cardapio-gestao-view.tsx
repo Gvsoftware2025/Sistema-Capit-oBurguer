@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { produtos as produtosIniciais, categorias } from "@/lib/produtos"
+import { PRODUTOS as produtosIniciais, CATEGORIAS } from "@/lib/produtos"
 import type { Produto } from "@/lib/types"
 import { toast } from "sonner"
 import Image from "next/image"
@@ -162,9 +162,9 @@ export function CardapioGestaoView() {
                         <SelectValue placeholder="Selecione..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {categorias.map((cat) => (
-                          <SelectItem key={cat} value={cat}>
-                            {cat}
+                        {CATEGORIAS.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -205,20 +205,20 @@ export function CardapioGestaoView() {
           >
             Todos ({produtos.length})
           </button>
-          {categorias.map((cat) => {
-            const count = produtos.filter((p) => p.categoria === cat).length
+            {CATEGORIAS.map((cat) => {
+            const count = produtos.filter((p) => p.categoria === cat.id).length
             return (
               <button
-                key={cat}
-                onClick={() => setCategoriaAtiva(cat)}
+                key={cat.id}
+                onClick={() => setCategoriaAtiva(cat.id)}
                 className={cn(
                   "px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
-                  categoriaAtiva === cat
+                  categoriaAtiva === cat.id
                     ? "bg-primary text-primary-foreground"
                     : "bg-card border border-border hover:border-primary/50"
                 )}
               >
-                {cat} ({count})
+                {cat.label} ({count})
               </button>
             )
           })}
