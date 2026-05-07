@@ -23,9 +23,12 @@ export function Header({
   ultimaAtualizacao,
   onRefresh,
 }: HeaderProps) {
-  const [agora, setAgora] = useState(new Date())
+  const [agora, setAgora] = useState<Date | null>(null)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
+    setAgora(new Date())
     const interval = setInterval(() => setAgora(new Date()), 1000)
     return () => clearInterval(interval)
   }, [])
@@ -72,7 +75,8 @@ export function Header({
             alt="Logo"
             width={50}
             height={50}
-            className="rounded-full hidden lg:block"
+            loading="eager"
+            className="rounded-full hidden lg:block w-auto h-auto"
           />
           <span className="text-2xl lg:text-3xl font-serif font-bold text-primary tracking-wider">
             BURGUER
@@ -101,8 +105,8 @@ export function Header({
         <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card border border-border">
           <Clock className="h-4 w-4 text-muted-foreground" />
           <div className="text-right">
-            <p className="text-lg font-bold font-mono">{formatTime(agora)}</p>
-            <p className="text-xs text-muted-foreground capitalize">{formatDate(agora)}</p>
+            <p className="text-lg font-bold font-mono">{mounted && agora ? formatTime(agora) : "--:--"}</p>
+            <p className="text-xs text-muted-foreground capitalize">{mounted && agora ? formatDate(agora) : "Carregando..."}</p>
           </div>
         </div>
       </div>

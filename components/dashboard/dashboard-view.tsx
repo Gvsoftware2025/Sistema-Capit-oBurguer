@@ -9,7 +9,7 @@ import { StatsBar } from "./stats-bar"
 import { playOrderSound } from "@/lib/audio"
 import type { Pedido } from "@/lib/types"
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json())
+const fetcher = (url: string) => fetch(url).then((res) => res.json()).then((data) => data.pedidos || [])
 
 type StatusFiltro = "todos" | "novo" | "preparando" | "pronto"
 
