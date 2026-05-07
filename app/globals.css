@@ -202,3 +202,16 @@
   background: oklch(0.32 0.04 60);
   border-radius: 3px;
 }
+
+@keyframes pulse-border {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 oklch(0.62 0.22 30 / 0.7);
+  }
+  50% { 
+    box-shadow: 0 0 0 4px oklch(0.62 0.22 30 / 0.4);
+  }
+}
+
+.animate-pulse-border {
+  animation: pulse-border 1.5s ease-in-out infinite;
+}
