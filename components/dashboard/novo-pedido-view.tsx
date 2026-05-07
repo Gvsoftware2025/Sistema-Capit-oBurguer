@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
-import { produtos, categorias } from "@/lib/produtos"
+import { PRODUTOS, CATEGORIAS } from "@/lib/produtos"
 import type { ItemPedido } from "@/lib/types"
 import { toast } from "sonner"
 
@@ -24,14 +24,16 @@ export function NovoPedidoView() {
   const [enviando, setEnviando] = useState(false)
   const [mostrarResumo, setMostrarResumo] = useState(false)
 
-  const produtosFiltrados = produtos.filter((p) => {
-    const matchCategoria = p.categoria === categoriaAtiva
+  const categoriaAtivaId = CATEGORIAS.find(c => c.label === categoriaAtiva)?.id || "burgueres"
+  
+  const produtosFiltrados = PRODUTOS.filter((p) => {
+    const matchCategoria = p.categoria === categoriaAtivaId
     const matchBusca = busca === "" || p.nome.toLowerCase().includes(busca.toLowerCase())
     return matchCategoria && matchBusca
   })
 
   const adicionarItem = (produtoId: string) => {
-    const produto = produtos.find((p) => p.id === produtoId)
+    const produto = PRODUTOS.find((p) => p.id === produtoId)
     if (!produto) return
 
     setItens((prev) => {
@@ -74,7 +76,7 @@ export function NovoPedidoView() {
       return
     }
     if (tipo === "balcao" && !numeroMesa.trim()) {
-      toast.error("Informe o número da mesa")
+      toast.error("Informe o numero da mesa")
       return
     }
     setMostrarResumo(true)
@@ -114,12 +116,12 @@ export function NovoPedidoView() {
   // Modal de Resumo
   if (mostrarResumo) {
     return (
-      <div className="flex items-center justify-center min-h-full p-4 bg-background/80 backdrop-blur-sm">
-        <div className="w-full max-w-lg bg-card border-2 border-primary rounded-2xl overflow-hidden shadow-2xl">
+      <div className="flex items-center justify-center min-h-full p-4 bg-background/80 backdrop-blur-sm animate-scale-in">
+        <div className="w-full max-w-lg bg-card border-2 border-primary rounded-2xl overflow-hidden shadow-2xl shadow-primary/20">
           {/* Header */}
-          <div className="bg-primary/10 border-b border-primary/30 p-6">
+          <div className="bg-gradient-to-r from-primary/20 to-primary/5 border-b border-primary/30 p-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center animate-pulse">
                 <Package className="h-6 w-6 text-primary" />
               </div>
               <div>
@@ -197,7 +199,7 @@ export function NovoPedidoView() {
               Voltar
             </Button>
             <Button
-              className="flex-1 h-12 bg-green-600 hover:bg-green-700 text-white font-bold"
+              className="flex-1 h-12 bg-green-600 hover:bg-green-700 text-white font-bold shadow-lg shadow-green-500/30"
               onClick={enviarPedido}
               disabled={enviando}
             >
@@ -215,7 +217,7 @@ export function NovoPedidoView() {
       {/* Cardapio */}
       <div className="flex-1 flex flex-col border-r border-border">
         {/* Header */}
-        <div className="p-4 lg:p-6 border-b border-border">
+        <div className="p-4 lg:p-6 border-b border-border bg-gradient-to-r from-card/80 to-card/50">
           <h1 className="text-2xl font-serif font-bold text-primary mb-4">Cardapio</h1>
 
           {/* Busca */}
@@ -225,24 +227,24 @@ export function NovoPedidoView() {
               placeholder="Buscar produto..."
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
-              className="pl-10"
+              className="pl-10 bg-background/50"
             />
           </div>
 
           {/* Categorias */}
           <div className="flex flex-wrap gap-2">
-            {categorias.map((cat) => (
+            {CATEGORIAS.map((cat) => (
               <button
-                key={cat}
-                onClick={() => setCategoriaAtiva(cat)}
+                key={cat.id}
+                onClick={() => setCategoriaAtiva(cat.label)}
                 className={cn(
-                  "px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
-                  categoriaAtiva === cat
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-card border border-border hover:border-primary/50"
+                  "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                  categoriaAtiva === cat.label
+                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
+                    : "bg-card border border-border hover:border-primary/50 hover:bg-primary/5"
                 )}
               >
-                {cat}
+                {cat.label}
               </button>
             ))}
           </div>
@@ -251,15 +253,16 @@ export function NovoPedidoView() {
         {/* Lista Produtos */}
         <div className="flex-1 overflow-auto p-4 lg:p-6">
           <div className="space-y-2">
-            {produtosFiltrados.map((produto) => {
+            {produtosFiltrados.map((produto, index) => {
               const qtd = getQuantidade(produto.id)
               return (
                 <div
                   key={produto.id}
                   className={cn(
-                    "flex items-center justify-between p-4 rounded-xl border bg-card transition-all",
-                    qtd > 0 ? "border-primary ring-1 ring-primary/20" : "border-border"
+                    "flex items-center justify-between p-4 rounded-xl border bg-card/50 transition-all duration-300 hover:bg-card animate-slide-in-up",
+                    qtd > 0 ? "border-primary ring-1 ring-primary/20 shadow-lg shadow-primary/10" : "border-border"
                   )}
+                  style={{ animationDelay: `${index * 30}ms` }}
                 >
                   <div className="flex-1">
                     <h3 className="font-semibold uppercase text-sm">{produto.nome}</h3>
@@ -282,12 +285,12 @@ export function NovoPedidoView() {
                           >
                             <Minus className="h-4 w-4" />
                           </Button>
-                          <span className="w-6 text-center font-bold">{qtd}</span>
+                          <span className="w-6 text-center font-bold text-primary">{qtd}</span>
                         </>
                       )}
                       <Button
                         size="icon"
-                        className="h-8 w-8 rounded-full bg-primary hover:bg-primary/90"
+                        className="h-8 w-8 rounded-full bg-primary hover:bg-primary/90 shadow-lg shadow-primary/30"
                         onClick={() => adicionarItem(produto.id)}
                       >
                         <Plus className="h-4 w-4" />
@@ -302,7 +305,7 @@ export function NovoPedidoView() {
       </div>
 
       {/* Resumo Pedido */}
-      <div className="w-full lg:w-96 flex flex-col bg-card/50">
+      <div className="w-full lg:w-96 flex flex-col bg-gradient-to-b from-card/80 to-card/50">
         <div className="p-4 lg:p-6 border-b border-border">
           <h2 className="text-xl font-serif font-bold text-primary flex items-center gap-2">
             <User className="h-5 w-5" />
@@ -319,6 +322,7 @@ export function NovoPedidoView() {
               placeholder="Nome do cliente"
               value={nomeCliente}
               onChange={(e) => setNomeCliente(e.target.value)}
+              className="bg-background/50"
             />
           </div>
 
@@ -331,9 +335,9 @@ export function NovoPedidoView() {
                   key={t}
                   onClick={() => setTipo(t)}
                   className={cn(
-                    "py-2 px-3 rounded-lg text-sm font-medium transition-all border",
+                    "py-2.5 px-3 rounded-lg text-sm font-medium transition-all border",
                     tipo === t
-                      ? "bg-primary text-primary-foreground border-primary"
+                      ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/30"
                       : "bg-card border-border hover:border-primary/50"
                   )}
                 >
@@ -345,14 +349,14 @@ export function NovoPedidoView() {
 
           {/* Numero Mesa (so aparece se for balcao) */}
           {tipo === "balcao" && (
-            <div className="space-y-2">
+            <div className="space-y-2 animate-slide-in-up">
               <Label className="text-xs uppercase tracking-wide text-muted-foreground">Numero da Mesa</Label>
               <Input
                 placeholder="Ex: 5"
                 value={numeroMesa}
                 onChange={(e) => setNumeroMesa(e.target.value)}
                 type="number"
-                className="text-center text-lg font-bold"
+                className="text-center text-xl font-bold bg-background/50"
               />
             </div>
           )}
@@ -363,15 +367,16 @@ export function NovoPedidoView() {
               Itens ({itens.reduce((a, i) => a + i.quantidade, 0)})
             </Label>
             {itens.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">
+              <p className="text-sm text-muted-foreground py-4 text-center border border-dashed border-border rounded-lg">
                 Nenhum item adicionado
               </p>
             ) : (
-              <div className="space-y-2 max-h-48 overflow-auto">
-                {itens.map((item) => (
+              <div className="space-y-2 max-h-48 overflow-auto scrollbar-thin">
+                {itens.map((item, index) => (
                   <div
                     key={item.produtoId}
-                    className="flex items-center justify-between p-2 rounded-lg bg-background border border-border"
+                    className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-border animate-scale-in"
+                    style={{ animationDelay: `${index * 50}ms` }}
                   >
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-primary">{item.quantidade}x</span>
@@ -396,18 +401,19 @@ export function NovoPedidoView() {
               value={observacao}
               onChange={(e) => setObservacao(e.target.value)}
               rows={2}
+              className="bg-background/50"
             />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="p-4 lg:p-6 border-t border-border space-y-4">
+        <div className="p-4 lg:p-6 border-t border-border space-y-4 bg-card/50">
           <div className="flex items-center justify-between text-lg">
             <span className="font-medium">Total:</span>
-            <span className="font-bold text-primary text-xl">R$ {total.toFixed(2)}</span>
+            <span className="font-bold text-primary text-2xl">R$ {total.toFixed(2)}</span>
           </div>
           <Button
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-12"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-12 shadow-lg shadow-primary/30 btn-glow transition-all"
             onClick={finalizarPedido}
             disabled={itens.length === 0}
           >
