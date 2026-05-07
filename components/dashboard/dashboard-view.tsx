@@ -21,10 +21,9 @@ export function DashboardView() {
   const audioContextRef = useRef<AudioContext | null>(null)
 
   const { data: pedidos = [], mutate } = useSWR<Pedido[]>("/api/pedidos", fetcher, {
-    refreshInterval: 2000,
+    refreshInterval: 1000,
   })
 
-  // Ativar audio context
   const ativarSom = useCallback(() => {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
@@ -32,7 +31,6 @@ export function DashboardView() {
     setSomAtivado(true)
   }, [])
 
-  // Tocar som quando novo pedido chegar
   useEffect(() => {
     if (!somAtivado) return
 
@@ -47,7 +45,6 @@ export function DashboardView() {
     prevPedidosRef.current = idsNovos
   }, [pedidos, somAtivado])
 
-  // Avançar pedido para preparando
   const avancarPedido = async (id: string) => {
     await fetch(`/api/pedidos/${id}`, {
       method: "PATCH",
@@ -57,7 +54,6 @@ export function DashboardView() {
     mutate()
   }
 
-  // Finalizar pedido
   const finalizarPedido = async (id: string) => {
     await fetch(`/api/pedidos/${id}`, {
       method: "PATCH",
@@ -67,21 +63,18 @@ export function DashboardView() {
     mutate()
   }
 
-  // Filtrar pedidos
   const pedidosAtivos = pedidos.filter((p) => p.status !== "finalizado")
   const pedidosFiltrados =
     filtroAtivo === "todos"
       ? pedidosAtivos
       : pedidosAtivos.filter((p) => p.status === filtroAtivo)
 
-  // Ordenar
   const pedidosOrdenados = [...pedidosFiltrados].sort((a, b) => {
     if (ordenacao === "recentes") return new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime()
     if (ordenacao === "antigos") return new Date(a.criadoEm).getTime() - new Date(b.criadoEm).getTime()
     return b.numero - a.numero
   })
 
-  // Contagens
   const contagens = {
     todos: pedidosAtivos.length,
     novo: pedidosAtivos.filter((p) => p.status === "novo").length,
@@ -90,7 +83,7 @@ export function DashboardView() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-hidden">
       <Header
         somAtivado={somAtivado}
         onToggleSom={() => (somAtivado ? setSomAtivado(false) : ativarSom())}
@@ -104,11 +97,13 @@ export function DashboardView() {
         onOrdenacaoChange={setOrdenacao}
       />
 
-      <PedidosGrid
-        pedidos={pedidosOrdenados}
-        onFinalizar={finalizarPedido}
-        onAvancar={avancarPedido}
-      />
+      <div className="flex-1 overflow-hidden">
+        <PedidosGrid
+          pedidos={pedidosOrdenados}
+          onFinalizar={finalizarPedido}
+          onAvancar={avancarPedido}
+        />
+      </div>
 
       <StatsBar
         total={contagens.todos}
