@@ -41,27 +41,24 @@ export function Header({
     return `${weekday.charAt(0).toUpperCase() + weekday.slice(1)}, ${day}`
   }
 
-  const tempoAtras = ultimaAtualizacao
-    ? Math.floor((Date.now() - ultimaAtualizacao.getTime()) / 1000)
-    : 0
-
   return (
     <header className="flex items-center justify-between gap-4 px-6 py-4 border-b border-border/50 bg-gradient-to-r from-card/80 via-card/60 to-card/80 backdrop-blur-sm">
       {/* Left - Status */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-primary/10 border border-primary/30">
-          <RefreshCw
-            className={cn(
-              "h-4 w-4 text-primary cursor-pointer transition-transform hover:rotate-180 duration-500",
-              onRefresh && "hover:text-primary/80"
-            )}
-            onClick={onRefresh}
-          />
+          <div className="relative">
+            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+            <RefreshCw
+              className={cn(
+                "h-4 w-4 text-primary cursor-pointer transition-transform hover:rotate-180 duration-500",
+                onRefresh && "hover:text-primary/80"
+              )}
+              onClick={onRefresh}
+            />
+          </div>
           <div>
             <p className="text-sm font-bold text-primary">{titulo}</p>
-            <p className="text-xs text-muted-foreground">
-              Atualizado há {tempoAtras}s
-            </p>
+            <p className="text-xs text-green-500">Ao vivo</p>
           </div>
         </div>
       </div>
