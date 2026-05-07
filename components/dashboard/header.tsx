@@ -2,7 +2,6 @@
 
 import { Volume2, VolumeX, Clock } from "lucide-react"
 import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
 
@@ -25,17 +24,14 @@ export function Header({ somAtivado, onToggleSom }: HeaderProps) {
   const formatTime = (date: Date) =>
     date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
 
-  const formatDate = (date: Date) => {
-    const weekday = date.toLocaleDateString("pt-BR", { weekday: "long" })
-    const day = date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })
-    return `${weekday.charAt(0).toUpperCase() + weekday.slice(1)}, ${day}`
-  }
+  const formatDate = (date: Date) =>
+    date.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" })
 
   return (
-    <header className="flex items-center justify-between gap-4 px-6 py-3 border-b border-border/50 bg-gradient-to-r from-card/80 via-card/60 to-card/80 backdrop-blur-sm shrink-0">
-      {/* Center - Logo Title */}
-      <div className="flex items-center gap-3">
-        <div className="relative w-10 h-10 rounded-full overflow-hidden border border-primary/30 shrink-0">
+    <header className="flex items-center justify-between gap-2 pl-16 pr-4 lg:px-6 py-3 border-b border-border/50 bg-card/80 backdrop-blur-sm shrink-0">
+      {/* Logo + Title */}
+      <div className="flex items-center gap-2 min-w-0">
+        <div className="relative w-9 h-9 rounded-full overflow-hidden border border-primary/30 shrink-0">
           <Image
             src="/logo-capitao-burguer.jpeg"
             alt="Logo"
@@ -44,39 +40,39 @@ export function Header({ somAtivado, onToggleSom }: HeaderProps) {
             priority
           />
         </div>
-        <div>
-          <h1 className="text-lg font-serif font-bold tracking-wide leading-none">
+        <div className="min-w-0">
+          <h1 className="text-sm font-serif font-bold tracking-wide leading-none truncate">
             <span className="text-primary">CAPITÃO</span>
-            <span className="text-foreground ml-1.5">BURGUER</span>
+            <span className="text-foreground ml-1">BURGUER</span>
           </h1>
-          <p className="text-[9px] text-muted-foreground tracking-[0.25em]">HAMBURGUER E PORÇÕES</p>
+          <p className="text-[8px] text-muted-foreground tracking-widest hidden sm:block">HAMBURGUER E PORÇÕES</p>
         </div>
       </div>
 
-      {/* Right - Controls */}
-      <div className="flex items-center gap-3">
-        <Button
-          variant="outline"
-          size="sm"
+      {/* Right - Som + Hora */}
+      <div className="flex items-center gap-2 shrink-0">
+        {/* Botão som */}
+        <button
           onClick={onToggleSom}
           className={cn(
-            "gap-2 h-9 px-3 transition-all text-xs",
+            "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all",
             somAtivado
-              ? "border-green-500/50 bg-green-500/10 text-green-500 hover:bg-green-500/20"
-              : "border-red-500/50 bg-red-500/10 text-red-400 hover:bg-red-500/20"
+              ? "border-green-500/50 bg-green-500/10 text-green-400"
+              : "border-red-500/50 bg-red-500/10 text-red-400"
           )}
         >
-          {somAtivado ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-          <span className="hidden sm:inline">Som {somAtivado ? "ativo" : "mudo"}</span>
-        </Button>
+          {somAtivado ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
+          <span className="hidden sm:inline">{somAtivado ? "Som ativo" : "Mudo"}</span>
+        </button>
 
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-card border border-border">
-          <Clock className="h-3.5 w-3.5 text-primary" />
-          <div className="text-right">
-            <p className="text-base font-bold font-mono leading-none">
+        {/* Relógio */}
+        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-card border border-border shrink-0">
+          <Clock className="h-3 w-3 text-primary hidden sm:block" />
+          <div>
+            <p className="text-sm font-bold font-mono leading-none">
               {mounted && agora ? formatTime(agora) : "--:--"}
             </p>
-            <p className="text-[9px] text-muted-foreground mt-0.5">
+            <p className="text-[8px] text-muted-foreground hidden sm:block mt-0.5">
               {mounted && agora ? formatDate(agora) : ""}
             </p>
           </div>

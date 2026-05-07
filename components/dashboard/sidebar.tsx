@@ -12,8 +12,6 @@ import {
   Users,
   BarChart3,
   Settings,
-  Printer,
-  Wifi,
   Menu,
   X,
 } from "lucide-react"
@@ -29,12 +27,7 @@ const menuItems = [
   { icon: Settings, label: "Configurações", href: "/dashboard/configuracoes" },
 ]
 
-interface SidebarProps {
-  impressoraConectada?: boolean
-  conexaoOnline?: boolean
-}
-
-export function Sidebar({ impressoraConectada = true, conexaoOnline = true }: SidebarProps) {
+export function Sidebar() {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -103,29 +96,11 @@ export function Sidebar({ impressoraConectada = true, conexaoOnline = true }: Si
           })}
         </nav>
 
-        {/* Status */}
-        <div className="p-3 space-y-2 border-t border-sidebar-border/50">
-          <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-sidebar-accent/30">
-            <Printer className="h-4 w-4 text-muted-foreground" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Impressora</p>
-              <p className={cn("text-xs font-semibold truncate", impressoraConectada ? "text-green-500" : "text-red-500")}>
-                {impressoraConectada ? "Conectada" : "Desconectada"}
-              </p>
-            </div>
-            <span className={cn("h-2 w-2 rounded-full flex-shrink-0", impressoraConectada ? "bg-green-500" : "bg-red-500")} />
-          </div>
-
-          <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-sidebar-accent/30">
-            <Wifi className="h-4 w-4 text-muted-foreground" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Conexão</p>
-              <p className={cn("text-xs font-semibold truncate", conexaoOnline ? "text-green-500" : "text-red-500")}>
-                {conexaoOnline ? "Online" : "Offline"}
-              </p>
-            </div>
-            <span className={cn("h-2 w-2 rounded-full flex-shrink-0 animate-pulse", conexaoOnline ? "bg-green-500" : "bg-red-500")} />
-          </div>
+        {/* Versão */}
+        <div className="p-4 border-t border-sidebar-border/50">
+          <p className="text-[10px] text-muted-foreground text-center tracking-wider">
+            Capitão Burguer © 2024
+          </p>
         </div>
       </aside>
     </>
