@@ -4,21 +4,23 @@ import type { NextRequest } from "next/server"
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Deixa passar: dashboard e suas sub-rotas, API, arquivos estáticos
-  if (
-    pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/api") ||
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/favicon") ||
-    pathname.includes(".")
-  ) {
+  // Deixa passar: dashboard e sub-rotas, API routes
+  if (pathname.startsWith("/dashboard") || pathname.startsWith("/api")) {
     return NextResponse.next()
   }
 
-  // Qualquer outra rota redireciona para /dashboard
+  // Qualquer outra rota (como "/" ou "/cardapio") redireciona para /dashboard
   return NextResponse.redirect(new URL("/dashboard", request.url))
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    "/((?!_next/static|_next/image|favicon.ico).*)",
+  ],
 }
