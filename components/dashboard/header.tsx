@@ -1,26 +1,17 @@
 "use client"
 
-import { Volume2, VolumeX, Clock, RefreshCw } from "lucide-react"
+import { Volume2, VolumeX, Clock } from "lucide-react"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import Image from "next/image"
 
 interface HeaderProps {
-  titulo: string
-  subtitulo?: string
   somAtivado: boolean
   onToggleSom: () => void
-  ultimaAtualizacao?: Date
-  onRefresh?: () => void
 }
 
-export function Header({
-  titulo,
-  somAtivado,
-  onToggleSom,
-  ultimaAtualizacao,
-  onRefresh,
-}: HeaderProps) {
+export function Header({ somAtivado, onToggleSom }: HeaderProps) {
   const [agora, setAgora] = useState<Date | null>(null)
   const [mounted, setMounted] = useState(false)
 
@@ -31,9 +22,8 @@ export function Header({
     return () => clearInterval(interval)
   }, [])
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
-  }
+  const formatTime = (date: Date) =>
+    date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
 
   const formatDate = (date: Date) => {
     const weekday = date.toLocaleDateString("pt-BR", { weekday: "long" })
@@ -42,40 +32,25 @@ export function Header({
   }
 
   return (
-    <header className="flex items-center justify-between gap-4 px-6 py-4 border-b border-border/50 bg-gradient-to-r from-card/80 via-card/60 to-card/80 backdrop-blur-sm">
-      {/* Left - Status */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-primary/10 border border-primary/30">
-          <div className="relative">
-            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-            <RefreshCw
-              className={cn(
-                "h-4 w-4 text-primary cursor-pointer transition-transform hover:rotate-180 duration-500",
-                onRefresh && "hover:text-primary/80"
-              )}
-              onClick={onRefresh}
-            />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-primary">{titulo}</p>
-            <p className="text-xs text-green-500">Ao vivo</p>
-          </div>
-        </div>
-      </div>
-
+    <header className="flex items-center justify-between gap-4 px-6 py-3 border-b border-border/50 bg-gradient-to-r from-card/80 via-card/60 to-card/80 backdrop-blur-sm shrink-0">
       {/* Center - Logo Title */}
-      <div className="hidden md:flex flex-col items-center">
-        <div className="flex items-center gap-3">
-          <div className="h-px w-12 bg-gradient-to-r from-transparent via-primary/50 to-primary" />
-          <h1 className="text-2xl lg:text-3xl font-serif font-bold tracking-wider">
-            <span className="text-primary">CAPITÃO</span>
-            <span className="text-foreground mx-2">BURGUER</span>
-          </h1>
-          <div className="h-px w-12 bg-gradient-to-l from-transparent via-primary/50 to-primary" />
+      <div className="flex items-center gap-3">
+        <div className="relative w-10 h-10 rounded-full overflow-hidden border border-primary/30 shrink-0">
+          <Image
+            src="/logo-capitao-burguer.jpeg"
+            alt="Logo"
+            fill
+            className="object-cover"
+            priority
+          />
         </div>
-        <p className="text-[10px] text-muted-foreground tracking-[0.3em] mt-1">
-          HAMBURGUER E PORÇÕES
-        </p>
+        <div>
+          <h1 className="text-lg font-serif font-bold tracking-wide leading-none">
+            <span className="text-primary">CAPITÃO</span>
+            <span className="text-foreground ml-1.5">BURGUER</span>
+          </h1>
+          <p className="text-[9px] text-muted-foreground tracking-[0.25em]">HAMBURGUER E PORÇÕES</p>
+        </div>
       </div>
 
       {/* Right - Controls */}
@@ -85,24 +60,24 @@ export function Header({
           size="sm"
           onClick={onToggleSom}
           className={cn(
-            "gap-2 h-10 px-4 transition-all",
-            somAtivado 
-              ? "border-green-500/50 bg-green-500/10 text-green-500 hover:bg-green-500/20" 
-              : "border-border hover:border-primary/50"
+            "gap-2 h-9 px-3 transition-all text-xs",
+            somAtivado
+              ? "border-green-500/50 bg-green-500/10 text-green-500 hover:bg-green-500/20"
+              : "border-red-500/50 bg-red-500/10 text-red-400 hover:bg-red-500/20"
           )}
         >
           {somAtivado ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-          <span className="hidden sm:inline text-xs">Som {somAtivado ? "ativado" : "desativado"}</span>
+          <span className="hidden sm:inline">Som {somAtivado ? "ativo" : "mudo"}</span>
         </Button>
 
-        <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-card border border-border">
-          <Clock className="h-4 w-4 text-primary" />
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-card border border-border">
+          <Clock className="h-3.5 w-3.5 text-primary" />
           <div className="text-right">
-            <p className="text-xl font-bold font-mono text-foreground">
+            <p className="text-base font-bold font-mono leading-none">
               {mounted && agora ? formatTime(agora) : "--:--"}
             </p>
-            <p className="text-[10px] text-muted-foreground">
-              {mounted && agora ? formatDate(agora) : "Carregando..."}
+            <p className="text-[9px] text-muted-foreground mt-0.5">
+              {mounted && agora ? formatDate(agora) : ""}
             </p>
           </div>
         </div>

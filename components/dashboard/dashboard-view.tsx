@@ -14,7 +14,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json()).then((data
 type StatusFiltro = "todos" | "novo" | "preparando" | "pronto"
 
 export function DashboardView() {
-  const [somAtivado, setSomAtivado] = useState(false)
+  const [somAtivado, setSomAtivado] = useState(true)
   const [filtroAtivo, setFiltroAtivo] = useState<StatusFiltro>("todos")
   const [ordenacao, setOrdenacao] = useState("recentes")
   const prevPedidosRef = useRef<string[]>([])
@@ -92,12 +92,8 @@ export function DashboardView() {
   return (
     <div className="flex flex-col h-full">
       <Header
-        titulo="Pedidos em Tempo Real"
-        subtitulo="Atualizando..."
         somAtivado={somAtivado}
         onToggleSom={() => (somAtivado ? setSomAtivado(false) : ativarSom())}
-        ultimaAtualizacao={new Date()}
-        onRefresh={() => mutate()}
       />
 
       <FiltrosPedidos
