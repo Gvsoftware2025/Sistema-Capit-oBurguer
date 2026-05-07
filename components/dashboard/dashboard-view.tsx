@@ -6,7 +6,7 @@ import { Header } from "./header"
 import { FiltrosPedidos } from "./filtros-pedidos"
 import { PedidosGrid } from "./pedidos-grid"
 import { StatsBar } from "./stats-bar"
-import { playNotificationSound } from "@/lib/audio"
+import { playOrderSound } from "@/lib/audio"
 import type { Pedido } from "@/lib/types"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
@@ -41,7 +41,7 @@ export function DashboardView() {
     const novosPedidosChegaram = idsNovos.some((id) => !prevPedidosRef.current.includes(id))
 
     if (novosPedidosChegaram && prevPedidosRef.current.length > 0) {
-      playNotificationSound(audioContextRef.current)
+      playOrderSound()
     }
 
     prevPedidosRef.current = idsNovos
