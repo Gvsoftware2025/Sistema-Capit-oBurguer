@@ -43,17 +43,17 @@ export function FiltrosPedidos({
   ]
 
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-6 py-4">
-      <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 px-6 py-6">
+      <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
         <button
           onClick={() => router.push("/dashboard/novo-pedido")}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-lg font-bold text-sm transition-all duration-200 bg-primary text-primary-foreground shadow-lg shadow-primary/30 hover:brightness-110 hover:shadow-primary/50 hover:scale-105 active:scale-95 border border-primary/50"
+          className="flex items-center gap-3 px-8 py-4 rounded-xl font-bold text-base transition-all duration-200 bg-primary text-primary-foreground shadow-lg shadow-primary/40 hover:brightness-110 hover:shadow-primary/60 hover:scale-105 active:scale-95 border border-primary/50 group"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
           <span>Novo Pedido</span>
         </button>
 
-        <div className="w-px h-6 bg-border mx-1" />
+        <div className="w-px h-8 bg-border mx-2" />
 
         {filtros.map((filtro) => {
           const isActive = filtroAtivo === filtro.value
