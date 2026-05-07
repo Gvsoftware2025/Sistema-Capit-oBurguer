@@ -1,6 +1,8 @@
 "use client"
 
 import { cn } from "@/lib/utils"
+import { useRouter } from "next/navigation"
+import { Plus } from "lucide-react"
 import {
   Select,
   SelectContent,
@@ -31,6 +33,8 @@ export function FiltrosPedidos({
   ordenacao,
   onOrdenacaoChange,
 }: FiltrosPedidosProps) {
+  const router = useRouter()
+
   const filtros: { value: StatusFiltro; label: string; activeBg: string; activeShadow: string }[] = [
     { value: "todos", label: "Todos", activeBg: "bg-primary", activeShadow: "shadow-primary/40" },
     { value: "novo", label: "Novos", activeBg: "bg-red-600", activeShadow: "shadow-red-500/40" },
@@ -40,7 +44,17 @@ export function FiltrosPedidos({
 
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-6 py-4">
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          onClick={() => router.push("/dashboard/novo-pedido")}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-lg font-bold text-sm transition-all duration-200 bg-primary text-primary-foreground shadow-lg shadow-primary/30 hover:brightness-110 hover:shadow-primary/50 hover:scale-105 active:scale-95 border border-primary/50"
+        >
+          <Plus className="h-4 w-4" />
+          <span>Novo Pedido</span>
+        </button>
+
+        <div className="w-px h-6 bg-border mx-1" />
+
         {filtros.map((filtro) => {
           const isActive = filtroAtivo === filtro.value
           return (
