@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import type { Pedido } from "@/lib/types"
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json())
+const fetcher = (url: string) => fetch(url).then((res) => res.json()).then((data) => data.pedidos || [])
 
 export function RelatoriosView() {
   const [dataInicio, setDataInicio] = useState("")

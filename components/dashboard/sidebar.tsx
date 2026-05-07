@@ -43,15 +43,15 @@ export function Sidebar({ impressoraConectada = true, conexaoOnline = true }: Si
       {/* Mobile toggle */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="fixed top-4 left-4 z-50 lg:hidden bg-background/80 backdrop-blur p-2 rounded-lg border border-border"
+        className="fixed top-4 left-4 z-50 lg:hidden bg-card/90 backdrop-blur p-2.5 rounded-lg border border-border shadow-lg"
       >
-        {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </button>
 
       {/* Overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black/60 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -59,67 +59,72 @@ export function Sidebar({ impressoraConectada = true, conexaoOnline = true }: Si
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 h-screen w-64 bg-sidebar border-r border-sidebar-border flex flex-col transition-transform lg:translate-x-0",
+          "fixed left-0 top-0 z-40 h-screen w-56 bg-gradient-to-b from-sidebar via-sidebar to-sidebar/95 border-r border-sidebar-border flex flex-col transition-transform duration-300 lg:translate-x-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         {/* Logo */}
-        <div className="p-4 flex justify-center border-b border-sidebar-border">
-          <div className="relative w-28 h-28">
+        <div className="p-6 flex justify-center">
+          <div className="relative w-24 h-24 rounded-full overflow-hidden ring-2 ring-primary/30 shadow-xl shadow-primary/20">
             <Image
               src="/logo-capitao-burguer.jpeg"
               alt="Capitão Burguer"
               fill
-              className="object-contain rounded-full"
+              className="object-cover"
+              priority
+              loading="eager"
             />
           </div>
         </div>
 
         {/* Menu */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
           {menuItems.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
+            const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))
+            const isExactDashboard = item.href === "/dashboard" && pathname === "/dashboard"
+            const active = isExactDashboard || (item.href !== "/dashboard" && isActive)
+            
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all",
-                  isActive
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                  "flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200",
+                  active
+                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/40"
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 )}
               >
-                <item.icon className="h-5 w-5" />
-                <span>{item.label}</span>
+                <item.icon className={cn("h-5 w-5", active && "drop-shadow-sm")} />
+                <span className="text-sm">{item.label}</span>
               </Link>
             )
           })}
         </nav>
 
         {/* Status */}
-        <div className="p-4 border-t border-sidebar-border space-y-2">
-          <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-sidebar-accent/50">
-            <Printer className="h-5 w-5 text-muted-foreground" />
-            <div className="flex-1">
-              <p className="text-xs text-muted-foreground">Impressora</p>
-              <p className={cn("text-sm font-medium", impressoraConectada ? "text-green-500" : "text-red-500")}>
+        <div className="p-3 space-y-2 border-t border-sidebar-border/50">
+          <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-sidebar-accent/30">
+            <Printer className="h-4 w-4 text-muted-foreground" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Impressora</p>
+              <p className={cn("text-xs font-semibold truncate", impressoraConectada ? "text-green-500" : "text-red-500")}>
                 {impressoraConectada ? "Conectada" : "Desconectada"}
               </p>
             </div>
-            <span className={cn("h-2 w-2 rounded-full", impressoraConectada ? "bg-green-500" : "bg-red-500")} />
+            <span className={cn("h-2 w-2 rounded-full flex-shrink-0", impressoraConectada ? "bg-green-500" : "bg-red-500")} />
           </div>
 
-          <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-sidebar-accent/50">
-            <Wifi className="h-5 w-5 text-muted-foreground" />
-            <div className="flex-1">
-              <p className="text-xs text-muted-foreground">Conexão</p>
-              <p className={cn("text-sm font-medium", conexaoOnline ? "text-green-500" : "text-red-500")}>
+          <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-sidebar-accent/30">
+            <Wifi className="h-4 w-4 text-muted-foreground" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Conexão</p>
+              <p className={cn("text-xs font-semibold truncate", conexaoOnline ? "text-green-500" : "text-red-500")}>
                 {conexaoOnline ? "Online" : "Offline"}
               </p>
             </div>
-            <span className={cn("h-2 w-2 rounded-full animate-pulse", conexaoOnline ? "bg-green-500" : "bg-red-500")} />
+            <span className={cn("h-2 w-2 rounded-full flex-shrink-0 animate-pulse", conexaoOnline ? "bg-green-500" : "bg-red-500")} />
           </div>
         </div>
       </aside>

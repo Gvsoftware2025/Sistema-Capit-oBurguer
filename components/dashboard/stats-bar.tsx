@@ -13,56 +13,55 @@ interface StatsBarProps {
 export function StatsBar({ total, novos, preparando, prontos }: StatsBarProps) {
   const stats = [
     {
-      label: "Total de Pedidos",
+      label: "TOTAL DE PEDIDOS",
       value: total,
       icon: Flame,
-      color: "text-red-500",
-      bgColor: "bg-red-500/10",
+      iconColor: "text-red-500",
+      iconBg: "bg-red-500/20",
       borderColor: "border-red-500/30",
     },
     {
-      label: "Novos",
+      label: "NOVOS",
       value: novos,
       icon: Clock,
-      color: "text-amber-500",
-      bgColor: "bg-amber-500/10",
+      iconColor: "text-amber-500",
+      iconBg: "bg-amber-500/20",
       borderColor: "border-amber-500/30",
     },
     {
-      label: "Preparando",
+      label: "PREPARANDO",
       value: preparando,
       icon: ChefHat,
-      color: "text-yellow-500",
-      bgColor: "bg-yellow-500/10",
+      iconColor: "text-yellow-500",
+      iconBg: "bg-yellow-500/20",
       borderColor: "border-yellow-500/30",
     },
     {
-      label: "Prontos",
+      label: "PRONTOS",
       value: prontos,
       icon: CheckCircle,
-      color: "text-green-500",
-      bgColor: "bg-green-500/10",
+      iconColor: "text-green-500",
+      iconBg: "bg-green-500/20",
       borderColor: "border-green-500/30",
     },
   ]
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 p-4 lg:p-6 bg-card/30 border-t border-border">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 p-4 lg:px-6 bg-gradient-to-t from-card/50 to-transparent border-t border-border/30">
       {stats.map((stat) => (
         <div
           key={stat.label}
           className={cn(
-            "flex items-center gap-4 p-4 rounded-xl border",
-            stat.bgColor,
+            "flex items-center gap-3 p-4 rounded-xl border bg-card/50 backdrop-blur-sm",
             stat.borderColor
           )}
         >
-          <div className={cn("p-3 rounded-full", stat.bgColor)}>
-            <stat.icon className={cn("h-6 w-6", stat.color)} />
+          <div className={cn("p-2.5 rounded-lg", stat.iconBg)}>
+            <stat.icon className={cn("h-5 w-5", stat.iconColor)} />
           </div>
           <div>
-            <p className="text-3xl font-bold font-mono">{String(stat.value).padStart(2, "0")}</p>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">{stat.label}</p>
+            <p className="text-2xl font-bold font-mono">{String(stat.value).padStart(2, "0")}</p>
+            <p className="text-[9px] text-muted-foreground uppercase tracking-wider font-medium">{stat.label}</p>
           </div>
         </div>
       ))}

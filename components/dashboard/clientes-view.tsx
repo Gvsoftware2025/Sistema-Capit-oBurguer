@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table"
 import type { Pedido } from "@/lib/types"
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json())
+const fetcher = (url: string) => fetch(url).then((res) => res.json()).then((data) => data.pedidos || [])
 
 interface ClienteStats {
   nome: string
