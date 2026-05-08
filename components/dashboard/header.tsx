@@ -27,7 +27,7 @@ export function Header({ somAtivado, onToggleSom }: HeaderProps) {
     date.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" })
 
   return (
-    <header className="flex items-center justify-between gap-4 pl-16 pr-4 lg:pl-6 lg:pr-6 py-4 bg-gradient-to-r from-card/95 via-card/90 to-card/95 backdrop-blur-sm border-b border-border/40 shrink-0">
+    <header className="flex items-center justify-between gap-4 px-4 lg:px-6 py-4 bg-gradient-to-r from-card/95 via-card/90 to-card/95 backdrop-blur-sm border-b border-border/40 shrink-0">
       {/* Título */}
       <div className="flex items-center gap-3">
         <div className="hidden sm:flex items-center gap-2">

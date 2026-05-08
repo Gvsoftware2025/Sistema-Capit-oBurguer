@@ -1,6 +1,5 @@
 "use client"
 
-import Image from "next/image"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -27,7 +26,7 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Botão hamburguer mobile */}
+      {/* Botao hamburguer mobile */}
       <button
         onClick={() => setSidebarAberto(!sidebarAberto)}
         className="fixed top-4 left-4 z-50 lg:hidden p-2.5 rounded-xl bg-card/90 backdrop-blur-sm border border-border shadow-lg hover:bg-card transition-all duration-200"
@@ -55,29 +54,27 @@ export function Sidebar() {
         )}
       >
         {/* Logo */}
-        <div className="relative flex flex-col items-center py-6 border-b border-sidebar-border/30">
-          <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-primary/50 shadow-xl shadow-primary/30 bg-sidebar-accent flex items-center justify-center">
-            <Image
+        <div className="flex flex-col items-center py-8 border-b border-sidebar-border/30">
+          <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-primary shadow-xl shadow-primary/40 bg-black">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src="/logo-capitao-burguer.jpeg"
               alt="Capitão Burguer"
-              width={96}
-              height={96}
-              className="object-cover w-full h-full"
-              priority
-              loading="eager"
+              className="w-full h-full object-cover"
             />
           </div>
-          <h2 className="mt-4 text-center">
-            <span className="text-sm font-bold tracking-wide text-primary">CAPITÃO</span>
-            <br />
-            <span className="text-sm font-bold tracking-wide text-foreground">BURGUER</span>
+          <h2 className="mt-4 text-center font-bold text-lg tracking-wide">
+            <span className="text-primary">CAPITÃO</span>
+            <span className="text-foreground ml-2">BURGUER</span>
           </h2>
-          <p className="text-[9px] text-muted-foreground tracking-[0.15em] mt-1 text-center">HAMBURGUER E PORÇÕES</p>
+          <p className="text-[10px] text-muted-foreground tracking-widest mt-1">
+            HAMBURGUER E PORÇÕES
+          </p>
         </div>
 
         {/* Menu */}
-        <nav className="flex-1 overflow-y-auto scrollbar-thin py-4 px-3">
-          <div className="space-y-1">
+        <nav className="flex-1 overflow-y-auto scrollbar-thin py-6 px-3">
+          <div className="space-y-2">
             {menuItems.map((item) => {
               const isActive = pathname === item.href
               const Icon = item.icon
@@ -87,17 +84,17 @@ export function Sidebar() {
                   href={item.href}
                   onClick={fecharSidebar}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm font-medium group",
+                    "flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 text-sm font-semibold group",
                     isActive
-                      ? "bg-gradient-to-r from-primary/20 to-primary/10 text-primary border border-primary/30 shadow-lg shadow-primary/10"
-                      : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 border border-transparent"
+                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
+                      : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
                   )}
                 >
                   <Icon className={cn(
                     "h-5 w-5 flex-shrink-0 transition-transform duration-200",
-                    isActive ? "text-primary" : "group-hover:scale-110"
+                    !isActive && "group-hover:scale-110"
                   )} />
-                  <span className="truncate">{item.label}</span>
+                  <span>{item.label}</span>
                 </Link>
               )
             })}
@@ -106,12 +103,12 @@ export function Sidebar() {
 
         {/* Footer */}
         <div className="p-4 border-t border-sidebar-border/30">
-          <div className="flex items-center justify-center gap-2 text-[10px] text-muted-foreground">
-            <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+          <div className="flex items-center justify-center gap-2 text-xs text-green-500 font-medium">
+            <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
             <span>Sistema Online</span>
           </div>
-          <p className="text-[9px] text-muted-foreground/60 text-center mt-2">
-            Capitão Burguer © 2024
+          <p className="text-[10px] text-muted-foreground/60 text-center mt-2">
+            © 2024 Capitão Burguer
           </p>
         </div>
       </aside>
