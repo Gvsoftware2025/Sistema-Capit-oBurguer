@@ -7,11 +7,7 @@ import { usePathname } from "next/navigation"
 import {
   LayoutDashboard,
   PlusCircle,
-  BookOpen,
-  History,
-  Users,
   BarChart3,
-  Settings,
   Menu,
   X,
 } from "lucide-react"
@@ -24,11 +20,7 @@ export function Sidebar() {
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
     { icon: PlusCircle, label: "Novo Pedido", href: "/dashboard/novo-pedido" },
-    { icon: BookOpen, label: "Cardápio", href: "/dashboard/cardapio" },
-    { icon: History, label: "Histórico", href: "/dashboard/historico" },
-    { icon: Users, label: "Clientes", href: "/dashboard/clientes" },
     { icon: BarChart3, label: "Relatórios", href: "/dashboard/relatorios" },
-    { icon: Settings, label: "Configurações", href: "/dashboard/configuracoes" },
   ]
 
   const fecharSidebar = () => setSidebarAberto(false)
