@@ -55,21 +55,14 @@ export function Sidebar() {
       >
         {/* Logo */}
         <div className="flex flex-col items-center py-8 border-b border-sidebar-border/30">
-          <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-primary shadow-xl shadow-primary/40 bg-black">
+          <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-primary shadow-xl shadow-primary/40">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/logo-capitao-burguer.jpeg"
+              src="/logo.png"
               alt="Capitão Burguer"
               className="w-full h-full object-cover"
             />
           </div>
-          <h2 className="mt-4 text-center font-bold text-lg tracking-wide">
-            <span className="text-primary">CAPITÃO</span>
-            <span className="text-foreground ml-2">BURGUER</span>
-          </h2>
-          <p className="text-[10px] text-muted-foreground tracking-widest mt-1">
-            HAMBURGUER E PORÇÕES
-          </p>
         </div>
 
         {/* Menu */}
