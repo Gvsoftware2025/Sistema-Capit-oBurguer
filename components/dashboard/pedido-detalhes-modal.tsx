@@ -36,14 +36,17 @@ export function PedidoDetalhesModal({
 }: PedidoDetalhesModalProps) {
   if (!pedido) return null
 
-  const statusConfig = {
+  const statusConfig: Record<string, { label: string; bg: string; text: string }> = {
     novo: { label: "NOVO", bg: "bg-red-600", text: "text-white" },
+    pendente: { label: "NOVO", bg: "bg-red-600", text: "text-white" },
     preparando: { label: "PREPARANDO", bg: "bg-amber-500", text: "text-black" },
     pronto: { label: "PRONTO", bg: "bg-green-600", text: "text-white" },
     finalizado: { label: "FINALIZADO", bg: "bg-zinc-600", text: "text-white" },
+    entregue: { label: "ENTREGUE", bg: "bg-blue-600", text: "text-white" },
   }
 
-  const config = statusConfig[pedido.status]
+  const defaultStatus = { label: pedido.status?.toUpperCase() || "DESCONHECIDO", bg: "bg-zinc-600", text: "text-white" }
+  const config = statusConfig[pedido.status] || defaultStatus
 
   const getTipoIcon = () => {
     switch (pedido.tipo) {

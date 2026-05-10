@@ -39,6 +39,8 @@ export async function GET(request: Request) {
 
 
 
+
+
     // Mapear para o formato do frontend
     const pedidosMapeados = pedidos.map((p) => ({
       id: p.id.toString(),
@@ -62,9 +64,9 @@ export async function GET(request: Request) {
                 return { nome: add, quantidade: 1, preco: 0 }
               }
               return {
-                nome: add.nome || add.name || "Adicional",
-                quantidade: add.quantidade || add.quantity || 1,
-                preco: Number(add.preco || add.price || 0)
+                nome: add.name || add.nome || "Adicional",
+                quantidade: add.quantity || add.quantidade || 1,
+                preco: Number(add.price || add.preco || 0)
               }
             }) : []
           } catch {
