@@ -12,6 +12,7 @@ export async function GET() {
        JOIN ${SCHEMA}.categories c ON p.category_id = c.id 
        ORDER BY c.display_order, p.display_order`
     )
+
     return NextResponse.json({ produtos })
   } catch (error) {
     console.error("[API] Erro ao buscar produtos:", error)
