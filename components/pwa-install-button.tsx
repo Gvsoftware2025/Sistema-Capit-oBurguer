@@ -9,103 +9,118 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>
 }
 
-declare global {
-  interface WindowEventMap {
-    beforeinstallprompt: BeforeInstallPromptEvent
-  }
+// Variavel global para capturar o evento antes do React montar
+let deferredPromptGlobal: BeforeInstallPromptEvent | null = null
+
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault()
+    deferredPromptGlobal = e as BeforeInstallPromptEvent
+  })
 }
 
 export function PWAInstallButton() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [showButton, setShowButton] = useState(false)
   const [isInstalled, setIsInstalled] = useState(false)
-  const [dismissed, setDismissed] = useState(false)
-  const [isIOS, setIsIOS] = useState(false)
 
   useEffect(() => {
-    // Verificar se é iOS
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent)
-    setIsIOS(isIOSDevice)
-
-    // Verificar se já está instalado (standalone mode)
+    // Verificar se já está instalado
     const isStandalone = window.matchMedia("(display-mode: standalone)").matches
     if (isStandalone) {
       setIsInstalled(true)
       return
     }
 
-    // Verificar se foi dispensado antes
-    const wasDismissed = localStorage.getItem("pwa-install-dismissed")
-    if (wasDismissed) {
-      setDismissed(true)
-      return
-    }
-
-    // Mostrar botão para iOS com instruções manuais
-    if (isIOSDevice) {
+    // Pegar o evento global se já foi capturado
+    if (deferredPromptGlobal) {
+      setDeferredPrompt(deferredPromptGlobal)
       setShowButton(true)
       return
     }
 
-    // Para outros navegadores, escutar o evento
-    const handler = (e: BeforeInstallPromptEvent) => {
+    // Escutar novos eventos
+    const handler = (e: Event) => {
       e.preventDefault()
-      setDeferredPrompt(e)
+      const evt = e as BeforeInstallPromptEvent
+      deferredPromptGlobal = evt
+      setDeferredPrompt(evt)
       setShowButton(true)
     }
 
     window.addEventListener("beforeinstallprompt", handler)
 
-    // Se após 2 segundos não disparou, mostrar botão com instruções
+    // Mostrar botão após 1 segundo de qualquer forma
     const timer = setTimeout(() => {
-      if (!deferredPrompt) {
-        setShowButton(true)
-      }
-    }, 2000)
+      setShowButton(true)
+    }, 1000)
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handler)
       clearTimeout(timer)
     }
-  }, [deferredPrompt])
+  }, [])
 
   const handleInstall = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt()
-      const { outcome } = await deferredPrompt.userChoice
-      if (outcome === "accepted") {
-        setShowButton(false)
-        setIsInstalled(true)
+    const prompt = deferredPrompt || deferredPromptGlobal
+    
+    if (prompt) {
+      try {
+        await prompt.prompt()
+        const { outcome } = await prompt.userChoice
+        if (outcome === "accepted") {
+          setShowButton(false)
+          setIsInstalled(true)
+          localStorage.setItem("pwa-installed", "true")
+        }
+      } catch (err) {
+        // Prompt já foi usado, mostrar instruções
+        showManualInstructions()
       }
+      deferredPromptGlobal = null
       setDeferredPrompt(null)
     } else {
-      // Mostrar instruções manuais
-      if (isIOS) {
-        alert("Para instalar no iOS:\n\n1. Toque no botão Compartilhar (quadrado com seta)\n2. Role para baixo e toque em 'Adicionar à Tela Inicial'\n3. Toque em 'Adicionar'")
-      } else {
-        alert("Para instalar:\n\n1. Clique nos 3 pontinhos do navegador (⋮)\n2. Clique em 'Instalar Capitão Burguer' ou 'Instalar app'\n\nSe não aparecer essa opção, tente usar o Google Chrome.")
-      }
+      showManualInstructions()
+    }
+  }
+
+  const showManualInstructions = () => {
+    const isChrome = navigator.userAgent.includes("Chrome")
+    const isEdge = navigator.userAgent.includes("Edg")
+    
+    if (isChrome || isEdge) {
+      alert(
+        "Para instalar:\n\n" +
+        "1. Clique nos 3 pontinhos (⋮) no canto superior direito\n" +
+        "2. Clique em 'Instalar Capitão Burguer'\n\n" +
+        "Se não aparecer, atualize a página e tente novamente."
+      )
+    } else {
+      alert(
+        "Para instalar, use o Google Chrome ou Microsoft Edge.\n\n" +
+        "1. Abra este site no Chrome ou Edge\n" +
+        "2. Clique nos 3 pontinhos (⋮)\n" +
+        "3. Clique em 'Instalar app'"
+      )
     }
   }
 
   const handleDismiss = () => {
     setShowButton(false)
-    setDismissed(true)
-    localStorage.setItem("pwa-install-dismissed", "true")
   }
 
-  if (isInstalled || dismissed || !showButton) return null
+  if (isInstalled || !showButton) return null
 
   return (
     <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 bg-card border-2 border-primary rounded-lg p-3 shadow-lg shadow-primary/20 animate-in slide-in-from-bottom-4">
-      <div className="flex-1">
+      <div className="flex-1 mr-2">
         <p className="text-sm font-bold text-foreground">Instalar App</p>
-        <p className="text-xs text-muted-foreground">Acesse mais rápido</p>
+        <p className="text-xs text-muted-foreground">Acesso rápido na área de trabalho</p>
       </div>
       <Button
         onClick={handleInstall}
         size="sm"
-        className="bg-primary hover:bg-primary/90 text-primary-foreground"
+        className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
       >
         <Download className="h-4 w-4 mr-1" />
         Instalar
@@ -113,6 +128,7 @@ export function PWAInstallButton() {
       <button
         onClick={handleDismiss}
         className="p-1 hover:bg-muted rounded"
+        title="Fechar"
       >
         <X className="h-4 w-4 text-muted-foreground" />
       </button>
