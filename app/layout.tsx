@@ -3,6 +3,7 @@ import { Inter, Cinzel } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Toaster } from "@/components/ui/sonner"
 import { PWARegister } from "@/components/pwa-register"
+import { PWAInstallButton } from "@/components/pwa-install-button"
 import "./globals.css"
 
 const inter = Inter({
@@ -56,6 +57,7 @@ export default function RootLayout({
       <body className="font-sans antialiased min-h-screen bg-background text-foreground">
         {children}
         <PWARegister />
+        <PWAInstallButton />
         <Toaster theme="dark" richColors position="top-center" />
         {process.env.NODE_ENV === "production" && <Analytics />}
       </body>
