@@ -8,9 +8,10 @@ interface PedidosGridProps {
   pedidos: Pedido[]
   onFinalizar: (id: string) => void
   onAvancar: (id: string) => void
+  onClickDetalhes: (pedido: Pedido) => void
 }
 
-export function PedidosGrid({ pedidos, onFinalizar, onAvancar }: PedidosGridProps) {
+export function PedidosGrid({ pedidos, onFinalizar, onAvancar, onClickDetalhes }: PedidosGridProps) {
   if (pedidos.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center p-8">
@@ -45,6 +46,7 @@ export function PedidosGrid({ pedidos, onFinalizar, onAvancar }: PedidosGridProp
               pedido={pedido}
               onFinalizar={onFinalizar}
               onAvancar={onAvancar}
+              onClickDetalhes={onClickDetalhes}
             />
           </div>
         ))}

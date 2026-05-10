@@ -25,7 +25,7 @@ export async function unlockAudio() {
   }
 }
 
-function beep(ctx: AudioContext, freq: number, start: number, dur: number, gain = 0.25) {
+function beep(ctx: AudioContext, freq: number, start: number, dur: number, gain = 0.5) {
   const osc = ctx.createOscillator()
   const g = ctx.createGain()
   osc.type = "square"
@@ -48,8 +48,9 @@ export function playOrderSound() {
   if (ctx.state === "suspended") {
     ctx.resume().catch(() => {})
   }
-  // Padrão: dois sinos curtos + um longo (alerta de cozinha)
-  beep(ctx, 880, 0, 0.15)
-  beep(ctx, 1175, 0.18, 0.15)
-  beep(ctx, 1480, 0.36, 0.4, 0.3)
+  // Som de alerta mais forte - 3 beeps altos
+  beep(ctx, 1000, 0, 0.2, 0.6)
+  beep(ctx, 1200, 0.25, 0.2, 0.6)
+  beep(ctx, 1000, 0.5, 0.2, 0.6)
+  beep(ctx, 1400, 0.75, 0.4, 0.7)
 }

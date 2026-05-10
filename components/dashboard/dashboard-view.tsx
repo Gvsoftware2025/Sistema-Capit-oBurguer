@@ -6,7 +6,9 @@ import { Header } from "./header"
 import { FiltrosPedidos } from "./filtros-pedidos"
 import { PedidosGrid } from "./pedidos-grid"
 import { StatsBar } from "./stats-bar"
+import { PedidoDetalhesModal } from "./pedido-detalhes-modal"
 import { playOrderSound } from "@/lib/audio"
+import { imprimirPedido } from "./pedido-print"
 import type { Pedido } from "@/lib/types"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json()).then((data) => data.pedidos || [])
@@ -17,6 +19,9 @@ export function DashboardView() {
   const [somAtivado, setSomAtivado] = useState(true)
   const [filtroAtivo, setFiltroAtivo] = useState<StatusFiltro>("todos")
   const [ordenacao, setOrdenacao] = useState("recentes")
+  const [pedidoSelecionado, setPedidoSelecionado] = useState<Pedido | null>(null)
+  const [modalAberto, setModalAberto] = useState(false)
+  const [impressaoAutomatica, setImpressaoAutomatica] = useState(true)
   const prevPedidosRef = useRef<string[]>([])
   const audioContextRef = useRef<AudioContext | null>(null)
 
@@ -32,18 +37,42 @@ export function DashboardView() {
   }, [])
 
   useEffect(() => {
-    if (!somAtivado) return
-
     const pedidosNovos = pedidos.filter((p) => p.status === "novo")
     const idsNovos = pedidosNovos.map((p) => p.id)
-    const novosPedidosChegaram = idsNovos.some((id) => !prevPedidosRef.current.includes(id))
+    
+    // Encontra pedidos que acabaram de chegar
+    const novosIds = idsNovos.filter((id) => !prevPedidosRef.current.includes(id))
+    const novosPedidosChegaram = novosIds.length > 0 && prevPedidosRef.current.length > 0
 
-    if (novosPedidosChegaram && prevPedidosRef.current.length > 0) {
-      playOrderSound()
+    if (novosPedidosChegaram) {
+      // Toca som se ativado
+      if (somAtivado) {
+        playOrderSound()
+      }
+      
+      // Impressao automatica
+      if (impressaoAutomatica) {
+        novosIds.forEach((id) => {
+          const pedido = pedidos.find((p) => p.id === id)
+          if (pedido) {
+            setTimeout(() => imprimirPedido(pedido), 500)
+          }
+        })
+      }
     }
 
     prevPedidosRef.current = idsNovos
-  }, [pedidos, somAtivado])
+  }, [pedidos, somAtivado, impressaoAutomatica])
+
+  const abrirDetalhes = (pedido: Pedido) => {
+    setPedidoSelecionado(pedido)
+    setModalAberto(true)
+  }
+
+  const fecharModal = () => {
+    setModalAberto(false)
+    setPedidoSelecionado(null)
+  }
 
   const avancarPedido = async (id: string) => {
     await fetch(`/api/pedidos/${id}`, {
@@ -102,8 +131,17 @@ export function DashboardView() {
           pedidos={pedidosOrdenados}
           onFinalizar={finalizarPedido}
           onAvancar={avancarPedido}
+          onClickDetalhes={abrirDetalhes}
         />
       </div>
+
+      {/* Modal detalhes */}
+      <PedidoDetalhesModal
+        pedido={pedidoSelecionado}
+        aberto={modalAberto}
+        onFechar={fecharModal}
+        onImprimir={imprimirPedido}
+      />
 
       <StatsBar
         total={contagens.todos}

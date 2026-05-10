@@ -9,9 +9,10 @@ interface PedidoCardProps {
   pedido: Pedido
   onFinalizar: (id: string) => void
   onAvancar?: (id: string) => void
+  onClickDetalhes?: (pedido: Pedido) => void
 }
 
-export function PedidoCard({ pedido, onFinalizar, onAvancar }: PedidoCardProps) {
+export function PedidoCard({ pedido, onFinalizar, onAvancar, onClickDetalhes }: PedidoCardProps) {
   const statusConfig = {
     novo: {
       label: "NOVO",
@@ -68,8 +69,9 @@ export function PedidoCard({ pedido, onFinalizar, onAvancar }: PedidoCardProps) 
 
   return (
     <div
+      onClick={() => onClickDetalhes?.(pedido)}
       className={cn(
-        "flex flex-col rounded-xl border-2 bg-card/80 backdrop-blur-sm overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1",
+        "flex flex-col rounded-xl border-2 bg-card/80 backdrop-blur-sm overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 cursor-pointer",
         config.border,
         config.glow,
         pedido.status === "novo" && "animate-pulse-border"
@@ -141,7 +143,7 @@ export function PedidoCard({ pedido, onFinalizar, onAvancar }: PedidoCardProps) 
       <div className="p-3 bg-card/30">
         {pedido.status === "novo" && onAvancar && (
           <Button
-            onClick={() => onAvancar(pedido.id)}
+            onClick={(e) => { e.stopPropagation(); onAvancar(pedido.id) }}
             className="w-full h-10 bg-amber-500 hover:bg-amber-600 text-black font-bold text-xs tracking-wide shadow-lg shadow-amber-500/30"
           >
             <CheckCircle className="h-4 w-4 mr-2" />
@@ -150,7 +152,7 @@ export function PedidoCard({ pedido, onFinalizar, onAvancar }: PedidoCardProps) 
         )}
         {pedido.status === "preparando" && (
           <Button
-            onClick={() => onFinalizar(pedido.id)}
+            onClick={(e) => { e.stopPropagation(); onFinalizar(pedido.id) }}
             className="w-full h-10 bg-green-600 hover:bg-green-700 text-white font-bold text-xs tracking-wide shadow-lg shadow-green-500/30"
           >
             <CheckCircle className="h-4 w-4 mr-2" />
@@ -159,7 +161,7 @@ export function PedidoCard({ pedido, onFinalizar, onAvancar }: PedidoCardProps) 
         )}
         {pedido.status === "pronto" && (
           <Button
-            onClick={() => onFinalizar(pedido.id)}
+            onClick={(e) => { e.stopPropagation(); onFinalizar(pedido.id) }}
             className="w-full h-10 bg-primary hover:bg-primary/90 font-bold text-xs tracking-wide shadow-lg shadow-primary/30"
           >
             <CheckCircle className="h-4 w-4 mr-2" />
