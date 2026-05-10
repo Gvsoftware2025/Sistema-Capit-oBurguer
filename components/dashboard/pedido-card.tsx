@@ -13,8 +13,16 @@ interface PedidoCardProps {
 }
 
 export function PedidoCard({ pedido, onFinalizar, onAvancar, onClickDetalhes }: PedidoCardProps) {
-  const statusConfig = {
+  const statusConfig: Record<string, { label: string; bgBadge: string; textBadge: string; border: string; labelColor: string; glow: string }> = {
     novo: {
+      label: "NOVO",
+      bgBadge: "bg-red-600",
+      textBadge: "text-white",
+      border: "border-red-500/60",
+      labelColor: "text-red-500",
+      glow: "shadow-[0_0_20px_rgba(239,68,68,0.3)]",
+    },
+    pendente: {
       label: "NOVO",
       bgBadge: "bg-red-600",
       textBadge: "text-white",
@@ -46,9 +54,26 @@ export function PedidoCard({ pedido, onFinalizar, onAvancar, onClickDetalhes }: 
       labelColor: "text-zinc-500",
       glow: "",
     },
+    entregue: {
+      label: "ENTREGUE",
+      bgBadge: "bg-blue-600",
+      textBadge: "text-white",
+      border: "border-blue-500/60",
+      labelColor: "text-blue-500",
+      glow: "",
+    },
   }
 
-  const config = statusConfig[pedido.status]
+  const defaultConfig = {
+    label: pedido.status?.toUpperCase() || "DESCONHECIDO",
+    bgBadge: "bg-zinc-600",
+    textBadge: "text-white",
+    border: "border-zinc-500/60",
+    labelColor: "text-zinc-500",
+    glow: "",
+  }
+
+  const config = statusConfig[pedido.status] || defaultConfig
   const tempoDecorrido = Math.floor((Date.now() - new Date(pedido.criadoEm).getTime()) / 60000)
 
   const getTipoIcon = () => {
