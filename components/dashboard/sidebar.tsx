@@ -12,6 +12,7 @@ import {
   BookOpen,
 } from "lucide-react"
 import { useState } from "react"
+import { LojaToggle } from "./loja-toggle"
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -98,6 +99,11 @@ export function Sidebar() {
             })}
           </div>
         </nav>
+
+        {/* Toggle Loja */}
+        <div className="px-3 pb-3">
+          <LojaToggle />
+        </div>
 
         {/* Footer */}
         <div className="p-4 border-t border-sidebar-border/30">
