@@ -1,24 +1,24 @@
 {
-  "name": "Capitão Burguer - Sistema de Gestão",
+  "name": "Capitão Burguer",
   "short_name": "Capitão Burguer",
-  "description": "Sistema de gestão de pedidos para hamburgueria",
+  "description": "Sistema de gestão de pedidos",
   "start_url": "/dashboard",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0c0a09",
   "theme_color": "#ca8a04",
-  "orientation": "any",
+  "orientation": "portrait-primary",
+  "categories": ["business", "food"],
   "icons": [
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
+      "type": "image/png"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
+      "type": "image/png"
     },
     {
       "src": "/icon-maskable-512.png",
@@ -26,5 +26,7 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ]
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false
 }
