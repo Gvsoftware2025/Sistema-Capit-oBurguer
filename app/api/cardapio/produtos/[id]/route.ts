@@ -11,14 +11,14 @@ export async function PUT(
   try {
     const { id } = await params
     const body = await request.json()
-    const { name, description, price, category_id, is_available } = body
+    const { name, description, price, category_id, image_url, is_available } = body
 
     const [produto] = await query<DbProduct>(
       `UPDATE ${SCHEMA}.products 
-       SET name = $1, description = $2, price = $3, category_id = $4, is_available = $5
-       WHERE id = $6
+       SET name = $1, description = $2, price = $3, category_id = $4, image_url = $5, is_available = $6
+       WHERE id = $7
        RETURNING *`,
-      [name, description || null, price, category_id, is_available ?? true, id]
+      [name, description || null, price, category_id, image_url || null, is_available ?? true, id]
     )
 
     if (!produto) {

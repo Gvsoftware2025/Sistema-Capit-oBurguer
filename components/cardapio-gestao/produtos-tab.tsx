@@ -31,7 +31,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toast } from "sonner"
-import { Plus, Pencil, Trash2, Loader2, Search } from "lucide-react"
+import { Plus, Pencil, Trash2, Loader2, Search, Upload, X } from "lucide-react"
+import { useRef } from "react"
 import { cn } from "@/lib/utils"
 import type { DbProduct, DbCategory } from "@/lib/db-types"
 
@@ -59,6 +60,47 @@ export function ProdutosTab() {
     image_url: "",
     is_available: true,
   })
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validar tamanho (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Imagem muito grande. Máximo 2MB.")
+      return
+    }
+
+    // Validar tipo
+    if (!file.type.startsWith("image/")) {
+      toast.error("Arquivo deve ser uma imagem")
+      return
+    }
+
+    setUploadingImage(true)
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string
+      setForm({ ...form, image_url: base64 })
+      setUploadingImage(false)
+    }
+    reader.onerror = () => {
+      toast.error("Erro ao carregar imagem")
+      setUploadingImage(false)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const removerImagem = () => {
+    setForm({ ...form, image_url: "" })
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
 
   const produtosFiltrados = produtos.filter((p) => {
     const matchBusca = p.name.toLowerCase().includes(busca.toLowerCase())
@@ -324,19 +366,45 @@ export function ProdutosTab() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="image_url">URL da Imagem</Label>
-              <Input
-                id="image_url"
-                value={form.image_url}
-                onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-                placeholder="https://exemplo.com/imagem.jpg"
+              <Label>Imagem do Produto</Label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
               />
-              {form.image_url && (
-                <div className="mt-2 w-20 h-20 rounded-lg overflow-hidden border border-border">
+              
+              {form.image_url ? (
+                <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-border group">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={form.image_url} alt="Preview" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={removerImagem}
+                    className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingImage}
+                  className="w-32 h-32 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {uploadingImage ? (
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  ) : (
+                    <>
+                      <Upload className="h-6 w-6" />
+                      <span className="text-xs text-center">Clique para enviar</span>
+                    </>
+                  )}
+                </button>
               )}
+              <p className="text-xs text-muted-foreground">PNG, JPG ou WEBP. Máximo 2MB.</p>
             </div>
             <div className="flex items-center justify-between">
               <Label>Disponível</Label>
