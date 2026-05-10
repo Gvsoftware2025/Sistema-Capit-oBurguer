@@ -54,23 +54,20 @@ export function FiltrosPedidos({
   }
 
   return (
-    <div className="px-4 lg:px-6 py-4 space-y-4 bg-gradient-to-b from-card/50 to-transparent border-b border-border/30 shrink-0">
-      {/* Botão Novo Pedido - Grande e destacado */}
+    <div className="px-3 sm:px-4 lg:px-6 py-3 space-y-3 bg-gradient-to-b from-card/50 to-transparent border-b border-border/30 shrink-0">
+      {/* Botão Novo Pedido */}
       <button
         onClick={() => router.push("/dashboard/novo-pedido")}
-        className="w-full flex items-center justify-center gap-4 py-5 rounded-2xl font-bold text-lg sm:text-xl tracking-wide transition-all duration-300 bg-gradient-to-r from-primary via-amber-500 to-primary text-primary-foreground shadow-2xl shadow-primary/30 hover:shadow-primary/50 hover:brightness-110 active:scale-[0.99] border-2 border-primary/40 group relative overflow-hidden"
+        className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-base sm:text-lg transition-all duration-200 bg-gradient-to-r from-primary to-amber-500 text-primary-foreground shadow-lg hover:brightness-110 active:scale-[0.99] border border-primary/40"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-black/20 group-hover:rotate-90 transition-transform duration-300">
-          <Plus className="h-6 w-6" />
-        </div>
+        <Plus className="h-5 w-5" />
         <span>NOVO PEDIDO</span>
       </button>
 
       {/* Filtros + Ordenação */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-        {/* Filtros em scroll horizontal no mobile */}
-        <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1 sm:pb-0 flex-1">
+      <div className="flex items-center gap-2">
+        {/* Filtros em scroll horizontal */}
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-none flex-1 -mx-1 px-1">
           {filtros.map((filtro) => {
             const isActive = filtroAtivo === filtro.value
             return (
@@ -78,14 +75,15 @@ export function FiltrosPedidos({
                 key={filtro.value}
                 onClick={() => onFiltroChange(filtro.value)}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 border-2 whitespace-nowrap flex-shrink-0",
+                  "flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-lg font-semibold text-xs sm:text-sm transition-all duration-200 border whitespace-nowrap flex-shrink-0",
                   getColorClasses(filtro.color, isActive)
                 )}
               >
-                {filtro.label}
+                <span className="hidden sm:inline">{filtro.label}</span>
+                <span className="sm:hidden">{filtro.label.slice(0, 3)}</span>
                 <span
                   className={cn(
-                    "min-w-[20px] h-5 flex items-center justify-center px-1.5 rounded-full text-[11px] font-bold",
+                    "min-w-[18px] h-[18px] flex items-center justify-center px-1 rounded-full text-[10px] font-bold",
                     isActive ? "bg-black/20" : "bg-muted text-muted-foreground"
                   )}
                 >
@@ -96,15 +94,15 @@ export function FiltrosPedidos({
           })}
         </div>
 
-        {/* Ordenação */}
+        {/* Ordenação - escondido no mobile muito pequeno */}
         <Select value={ordenacao} onValueChange={onOrdenacaoChange}>
-          <SelectTrigger className="h-10 w-full sm:w-[150px] bg-card/80 border-2 border-border/60 text-sm font-medium shrink-0 rounded-xl">
+          <SelectTrigger className="h-9 w-[100px] sm:w-[130px] bg-card/80 border border-border/60 text-xs sm:text-sm font-medium shrink-0 rounded-lg">
             <SelectValue placeholder="Ordenar" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="recentes">Mais recentes</SelectItem>
-            <SelectItem value="antigos">Mais antigos</SelectItem>
-            <SelectItem value="numero">Por número</SelectItem>
+            <SelectItem value="recentes">Recentes</SelectItem>
+            <SelectItem value="antigos">Antigos</SelectItem>
+            <SelectItem value="numero">Número</SelectItem>
           </SelectContent>
         </Select>
       </div>

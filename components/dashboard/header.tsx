@@ -27,46 +27,39 @@ export function Header({ somAtivado, onToggleSom }: HeaderProps) {
     date.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" })
 
   return (
-    <header className="flex items-center justify-between gap-4 px-4 lg:px-6 py-4 bg-gradient-to-r from-card/95 via-card/90 to-card/95 backdrop-blur-sm border-b border-border/40 shrink-0">
+    <header className="flex items-center justify-between gap-2 px-4 lg:px-6 py-3 bg-gradient-to-r from-card/95 via-card/90 to-card/95 backdrop-blur-sm border-b border-border/40 shrink-0">
       {/* Título */}
-      <div className="flex items-center gap-3">
-        <div className="hidden sm:flex items-center gap-2">
+      <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-1.5 shrink-0">
           <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-xs font-medium text-green-500">Ao vivo</span>
+          <span className="text-[10px] sm:text-xs font-medium text-green-500 hidden sm:inline">Ao vivo</span>
         </div>
-        <div className="h-4 w-px bg-border hidden sm:block" />
-        <h1 className="text-base sm:text-lg font-bold text-foreground">
-          Painel de Pedidos
+        <h1 className="text-sm sm:text-lg font-bold text-foreground truncate">
+          Pedidos
         </h1>
       </div>
 
       {/* Right - Som + Hora */}
-      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
         {/* Botão som */}
         <button
           onClick={onToggleSom}
           className={cn(
-            "flex items-center gap-2 px-3 py-2 rounded-xl border-2 text-sm font-semibold transition-all duration-200",
+            "flex items-center justify-center p-2 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl border-2 transition-all duration-200",
             somAtivado
-              ? "border-green-500/40 bg-green-500/10 text-green-400 hover:bg-green-500/20"
-              : "border-red-500/40 bg-red-500/10 text-red-400 hover:bg-red-500/20"
+              ? "border-green-500/40 bg-green-500/10 text-green-400"
+              : "border-red-500/40 bg-red-500/10 text-red-400"
           )}
         >
           {somAtivado ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-          <span className="hidden sm:inline text-xs">{somAtivado ? "Som" : "Mudo"}</span>
         </button>
 
         {/* Relógio */}
-        <div className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-card border-2 border-border/60">
-          <Clock className="h-4 w-4 text-primary hidden sm:block" />
-          <div className="text-right">
-            <p className="text-base sm:text-lg font-bold font-mono leading-none text-foreground">
-              {mounted && agora ? formatTime(agora) : "--:--"}
-            </p>
-            <p className="text-[9px] text-muted-foreground capitalize hidden sm:block mt-0.5">
-              {mounted && agora ? formatDate(agora) : ""}
-            </p>
-          </div>
+        <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-card border-2 border-border/60">
+          <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
+          <p className="text-sm sm:text-base font-bold font-mono leading-none text-foreground">
+            {mounted && agora ? formatTime(agora) : "--:--"}
+          </p>
         </div>
       </div>
     </header>

@@ -51,8 +51,8 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-0 h-screen w-56 bg-gradient-to-b from-sidebar via-sidebar to-sidebar/95 border-r border-sidebar-border/50 flex flex-col transition-transform duration-300 z-40 lg:translate-x-0 lg:relative lg:z-auto shadow-2xl",
-          sidebarAberto ? "translate-x-0" : "-translate-x-full"
+          "fixed left-0 top-0 h-screen w-56 bg-gradient-to-b from-sidebar via-sidebar to-sidebar/95 border-r border-sidebar-border/50 flex flex-col transition-transform duration-300 z-40 shadow-2xl",
+          sidebarAberto ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
         {/* Logo */}
