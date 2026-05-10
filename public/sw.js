@@ -3,7 +3,8 @@ const CACHE_NAME = 'capitao-burguer-v1';
 // Arquivos para cache offline
 const urlsToCache = [
   '/dashboard',
-  '/logo.png',
+  '/icon-192.png',
+  '/icon-512.png',
 ];
 
 // Instalar service worker
