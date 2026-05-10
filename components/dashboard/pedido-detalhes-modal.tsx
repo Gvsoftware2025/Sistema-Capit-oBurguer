@@ -142,29 +142,46 @@ export function PedidoDetalhesModal({
                       </div>
                       
                       {/* Variacao/Tamanho */}
-                      {(item as any).variacao && (
+                      {item.variacao && (
                         <p className="text-xs text-muted-foreground mt-1 ml-8">
-                          Tamanho: <span className="text-foreground">{(item as any).variacao}</span>
+                          Tamanho: <span className="text-foreground">{item.variacao}</span>
                         </p>
                       )}
 
                       {/* Maionese Gratis */}
-                      {(item as any).maioneseGratis && (
+                      {item.maionese && (
                         <p className="text-xs text-green-500 mt-1 ml-8">
-                          Maionese gratis: {(item as any).maioneseGratis}
+                          Maionese gratis: {item.maionese}
                         </p>
                       )}
 
+                      {/* Maioneses Extras */}
+                      {item.extraMaioneses && item.extraMaioneses.length > 0 && (
+                        <div className="mt-1 ml-8">
+                          <p className="text-xs text-muted-foreground">Maioneses extras:</p>
+                          <ul className="text-xs text-blue-400 mt-0.5 space-y-0.5">
+                            {item.extraMaioneses.map((maionese: string, j: number) => (
+                              <li key={j}>+ {maionese} (+R$ 2,00)</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
                       {/* Adicionais */}
-                      {(item as any).adicionais && (item as any).adicionais.length > 0 && (
+                      {item.adicionais && item.adicionais.length > 0 && (
                         <div className="mt-1 ml-8">
                           <p className="text-xs text-muted-foreground">Adicionais:</p>
                           <ul className="text-xs text-amber-500 mt-0.5 space-y-0.5">
-                            {(item as any).adicionais.map((add: any, j: number) => (
-                              <li key={j}>
-                                + {add.nome} {add.quantidade > 1 ? `(${add.quantidade}x)` : ""} - R$ {(add.preco * add.quantidade).toFixed(2)}
-                              </li>
-                            ))}
+                            {item.adicionais.map((add: any, j: number) => {
+                              const nome = typeof add === "string" ? add : add.nome || add.name || "Adicional"
+                              const qtd = typeof add === "object" ? (add.quantidade || add.quantity || 1) : 1
+                              const preco = typeof add === "object" ? (add.preco || add.price || 0) : 0
+                              return (
+                                <li key={j}>
+                                  + {nome} {qtd > 1 ? `(${qtd}x)` : ""} {preco > 0 ? `- R$ ${(preco * qtd).toFixed(2)}` : ""}
+                                </li>
+                              )
+                            })}
                           </ul>
                         </div>
                       )}

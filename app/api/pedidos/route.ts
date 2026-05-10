@@ -48,16 +48,50 @@ export async function GET(request: Request) {
       total: Number(p.total),
       status: p.status === "pendente" ? "novo" : p.status,
       criadoEm: p.created_at,
-      itens: (p.items || []).map((it: any) => ({
-        id: it.id?.toString(),
-        nome: it.productName,
-        quantidade: it.quantity,
-        variacao: it.variationName,
-        maionese: it.maionese,
-        extraMaioneses: it.extraMaioneses,
-        adicionais: it.addons,
-        preco: Number(it.itemTotal) / it.quantity,
-      })),
+      itens: (p.items || []).map((it: any) => {
+        // Parsear adicionais - pode ser array de strings ou array de objetos JSON
+        let adicionaisParsed: any[] = []
+        if (it.addons) {
+          try {
+            // Se for string JSON, parsear
+            const addons = typeof it.addons === "string" ? JSON.parse(it.addons) : it.addons
+            adicionaisParsed = Array.isArray(addons) ? addons.map((add: any) => {
+              if (typeof add === "string") {
+                return { nome: add, quantidade: 1, preco: 0 }
+              }
+              return {
+                nome: add.nome || add.name || "Adicional",
+                quantidade: add.quantidade || add.quantity || 1,
+                preco: Number(add.preco || add.price || 0)
+              }
+            }) : []
+          } catch {
+            adicionaisParsed = []
+          }
+        }
+
+        // Parsear maioneses extras
+        let extraMaioParsed: string[] = []
+        if (it.extraMaioneses) {
+          try {
+            const extras = typeof it.extraMaioneses === "string" ? JSON.parse(it.extraMaioneses) : it.extraMaioneses
+            extraMaioParsed = Array.isArray(extras) ? extras : []
+          } catch {
+            extraMaioParsed = []
+          }
+        }
+
+        return {
+          id: it.id?.toString(),
+          nome: it.productName,
+          quantidade: it.quantity,
+          variacao: it.variationName,
+          maionese: it.maionese,
+          extraMaioneses: extraMaioParsed,
+          adicionais: adicionaisParsed,
+          preco: Number(it.itemTotal) / it.quantity,
+        }
+      }),
     }))
 
     return NextResponse.json({ pedidos: pedidosMapeados })

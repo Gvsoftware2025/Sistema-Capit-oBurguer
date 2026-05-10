@@ -18,11 +18,21 @@ export type Produto = {
   imagem: string
 }
 
-export type ItemPedido = {
-  produtoId: string
+export type Adicional = {
   nome: string
   preco: number
   quantidade: number
+}
+
+export type ItemPedido = {
+  produtoId?: string
+  nome: string
+  preco: number
+  quantidade: number
+  variacao?: string
+  maionese?: string
+  extraMaioneses?: string[]
+  adicionais?: Adicional[]
   observacao?: string
 }
 

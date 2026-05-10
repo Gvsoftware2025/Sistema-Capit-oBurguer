@@ -48,23 +48,37 @@ export function PedidoPrint({ pedido }: PedidoPrintProps) {
             </div>
             
             {/* Variacao */}
-            {(item as any).variacao && (
-              <p className="text-xs pl-2">Tam: {(item as any).variacao}</p>
+            {item.variacao && (
+              <p className="text-xs pl-2">Tam: {item.variacao}</p>
             )}
 
             {/* Maionese Gratis */}
-            {(item as any).maioneseGratis && (
-              <p className="text-xs pl-2">Maionese: {(item as any).maioneseGratis}</p>
+            {item.maionese && (
+              <p className="text-xs pl-2">Maionese: {item.maionese}</p>
+            )}
+
+            {/* Maioneses extras */}
+            {item.extraMaioneses && item.extraMaioneses.length > 0 && (
+              <div className="pl-2">
+                {item.extraMaioneses.map((maionese: string, j: number) => (
+                  <p key={j} className="text-xs">+ {maionese} (+R$ 2,00)</p>
+                ))}
+              </div>
             )}
 
             {/* Adicionais */}
-            {(item as any).adicionais && (item as any).adicionais.length > 0 && (
+            {item.adicionais && item.adicionais.length > 0 && (
               <div className="pl-2">
-                {(item as any).adicionais.map((add: any, j: number) => (
-                  <p key={j} className="text-xs">
-                    + {add.nome} {add.quantidade > 1 ? `(${add.quantidade}x)` : ""} R$ {(add.preco * add.quantidade).toFixed(2)}
-                  </p>
-                ))}
+                {item.adicionais.map((add: any, j: number) => {
+                  const nome = typeof add === "string" ? add : add.nome || "Adicional"
+                  const qtd = typeof add === "object" ? (add.quantidade || 1) : 1
+                  const preco = typeof add === "object" ? (add.preco || 0) : 0
+                  return (
+                    <p key={j} className="text-xs">
+                      + {nome} {qtd > 1 ? `(${qtd}x)` : ""} {preco > 0 ? `R$ ${(preco * qtd).toFixed(2)}` : ""}
+                    </p>
+                  )
+                })}
               </div>
             )}
 
@@ -166,12 +180,17 @@ export function imprimirPedido(pedido: Pedido) {
               <span>${item.quantidade}x ${item.nome}</span>
               <span>R$ ${(item.preco * item.quantidade).toFixed(2)}</span>
             </div>
-            ${(item as any).variacao ? `<p class="small pl">Tam: ${(item as any).variacao}</p>` : ""}
-            ${(item as any).maioneseGratis ? `<p class="small pl">Maionese: ${(item as any).maioneseGratis}</p>` : ""}
-            ${(item as any).adicionais && (item as any).adicionais.length > 0 ? 
-              (item as any).adicionais.map((add: any) => 
-                `<p class="small pl">+ ${add.nome} ${add.quantidade > 1 ? `(${add.quantidade}x)` : ""} R$ ${(add.preco * add.quantidade).toFixed(2)}</p>`
-              ).join("") : ""}
+            ${item.variacao ? `<p class="small pl">Tam: ${item.variacao}</p>` : ""}
+            ${item.maionese ? `<p class="small pl">Maionese: ${item.maionese}</p>` : ""}
+            ${item.extraMaioneses && item.extraMaioneses.length > 0 ? 
+              item.extraMaioneses.map((m: string) => `<p class="small pl">+ ${m} (+R$ 2,00)</p>`).join("") : ""}
+            ${item.adicionais && item.adicionais.length > 0 ? 
+              item.adicionais.map((add: any) => {
+                const nome = typeof add === "string" ? add : add.nome || "Adicional"
+                const qtd = typeof add === "object" ? (add.quantidade || 1) : 1
+                const preco = typeof add === "object" ? (add.preco || 0) : 0
+                return `<p class="small pl">+ ${nome} ${qtd > 1 ? "("+qtd+"x)" : ""} ${preco > 0 ? "R$ "+(preco * qtd).toFixed(2) : ""}</p>`
+              }).join("") : ""}
             ${item.observacao ? `<p class="small pl">OBS: ${item.observacao}</p>` : ""}
           </div>
         `).join("")}
