@@ -9,6 +9,7 @@ import {
   BarChart3,
   Menu,
   X,
+  BookOpen,
 } from "lucide-react"
 import { useState } from "react"
 
@@ -19,6 +20,7 @@ export function Sidebar() {
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
     { icon: PlusCircle, label: "Novo Pedido", href: "/dashboard/novo-pedido" },
+    { icon: BookOpen, label: "Cardápio", href: "/dashboard/cardapio" },
     { icon: BarChart3, label: "Relatórios", href: "/dashboard/relatorios" },
   ]
 

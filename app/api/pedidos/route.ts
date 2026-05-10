@@ -1,25 +1,70 @@
 import { NextResponse } from "next/server"
-import {
-  criarPedido,
-  listarPedidos,
-  listarPedidosAtivos,
-  listarPedidosFinalizados,
-} from "@/lib/store"
-import type { OrigemPedido, TipoPedido, ItemPedido } from "@/lib/types"
+import { query, SCHEMA } from "@/lib/db"
+import type { DbOrder } from "@/lib/db-types"
 
 export const dynamic = "force-dynamic"
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const filtro = searchParams.get("filtro")
+  try {
+    const { searchParams } = new URL(request.url)
+    const filtro = searchParams.get("filtro")
 
-  if (filtro === "ativos") {
-    return NextResponse.json({ pedidos: listarPedidosAtivos() })
+    let whereClause = ""
+    if (filtro === "ativos") {
+      whereClause = "WHERE o.status IN ('pendente', 'preparando', 'pronto')"
+    } else if (filtro === "finalizados") {
+      whereClause = "WHERE o.status IN ('entregue', 'cancelado')"
+    }
+
+    const pedidos = await query<DbOrder>(`
+      SELECT o.*, 
+        COALESCE(json_agg(
+          json_build_object(
+            'id', oi.id,
+            'productName', oi.product_name,
+            'quantity', oi.quantity,
+            'variationName', oi.variation_name,
+            'maionese', oi.maionese,
+            'extraMaioneses', oi.extra_maioneses,
+            'addons', oi.addons,
+            'itemTotal', oi.item_total
+          )
+        ) FILTER (WHERE oi.id IS NOT NULL), '[]') as items
+      FROM ${SCHEMA}.orders o
+      LEFT JOIN ${SCHEMA}.order_items oi ON o.id = oi.order_id
+      ${whereClause}
+      GROUP BY o.id
+      ORDER BY o.created_at DESC
+    `)
+
+    // Mapear para o formato do frontend
+    const pedidosMapeados = pedidos.map((p) => ({
+      id: p.id.toString(),
+      numero: p.order_number,
+      cliente: p.customer_name,
+      endereco: p.customer_address,
+      tipo: p.delivery_type === "entregar" ? "entrega" : "retirada",
+      pagamento: p.payment_method,
+      total: Number(p.total),
+      status: p.status === "pendente" ? "novo" : p.status,
+      criadoEm: p.created_at,
+      itens: (p.items || []).map((it: any) => ({
+        id: it.id?.toString(),
+        nome: it.productName,
+        quantidade: it.quantity,
+        variacao: it.variationName,
+        maionese: it.maionese,
+        extraMaioneses: it.extraMaioneses,
+        adicionais: it.addons,
+        preco: Number(it.itemTotal) / it.quantity,
+      })),
+    }))
+
+    return NextResponse.json({ pedidos: pedidosMapeados })
+  } catch (error) {
+    console.error("[API] Erro ao buscar pedidos:", error)
+    return NextResponse.json({ pedidos: [], error: "Erro ao buscar pedidos" })
   }
-  if (filtro === "finalizados") {
-    return NextResponse.json({ pedidos: listarPedidosFinalizados() })
-  }
-  return NextResponse.json({ pedidos: listarPedidos() })
 }
 
 export async function POST(request: Request) {
@@ -27,47 +72,65 @@ export async function POST(request: Request) {
     const body = await request.json()
 
     const cliente = String(body.cliente ?? "").trim()
-    const tipo = (body.tipo ?? "balcao") as TipoPedido
-    const origem = (body.origem ?? "cliente") as OrigemPedido
-    const itens = Array.isArray(body.itens) ? (body.itens as ItemPedido[]) : []
+    const itens = Array.isArray(body.itens) ? body.itens : []
 
     if (!cliente) {
       return NextResponse.json(
         { error: "Nome do cliente é obrigatório" },
-        { status: 400 },
+        { status: 400 }
       )
     }
     if (itens.length === 0) {
       return NextResponse.json(
         { error: "Adicione ao menos um item" },
-        { status: 400 },
+        { status: 400 }
       )
     }
 
     const total = itens.reduce(
-      (acc, it) => acc + Number(it.preco) * Number(it.quantidade),
-      0,
+      (acc: number, it: any) => acc + Number(it.preco) * Number(it.quantidade),
+      0
     )
 
-    const pedido = criarPedido({
-      cliente,
-      telefone: body.telefone,
-      endereco: body.endereco,
-      tipo,
-      origem,
-      itens,
-      observacao: body.observacao,
-      total,
-    })
+    // Buscar próximo número do pedido
+    const [{ max_number }] = await query<{ max_number: number }>(
+      `SELECT COALESCE(MAX(order_number), 0) + 1 as max_number FROM ${SCHEMA}.orders`
+    )
 
-    // TODO: Integração futura com impressora térmica ESC/POS
-    // fetch("http://localhost:3001/print", { method: "POST", body: JSON.stringify(pedido) })
+    // Inserir pedido
+    const [pedido] = await query<DbOrder>(
+      `INSERT INTO ${SCHEMA}.orders 
+        (order_number, customer_name, delivery_type, payment_method, subtotal, delivery_fee, total, status)
+       VALUES ($1, $2, 'retirar', 'dinheiro', $3, 0, $3, 'pendente')
+       RETURNING *`,
+      [max_number, cliente, total]
+    )
 
-    return NextResponse.json({ pedido }, { status: 201 })
-  } catch (e) {
+    // Inserir itens
+    for (const item of itens) {
+      await query(
+        `INSERT INTO ${SCHEMA}.order_items 
+          (order_id, product_name, quantity, item_total)
+         VALUES ($1, $2, $3, $4)`,
+        [pedido.id, item.nome, item.quantidade, Number(item.preco) * Number(item.quantidade)]
+      )
+    }
+
+    return NextResponse.json({
+      pedido: {
+        id: pedido.id.toString(),
+        numero: pedido.order_number,
+        cliente: pedido.customer_name,
+        total: Number(pedido.total),
+        status: "novo",
+        criadoEm: pedido.created_at,
+      },
+    }, { status: 201 })
+  } catch (error) {
+    console.error("[API] Erro ao criar pedido:", error)
     return NextResponse.json(
       { error: "Erro ao criar pedido" },
-      { status: 500 },
+      { status: 500 }
     )
   }
 }
