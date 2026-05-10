@@ -9,100 +9,86 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>
 }
 
-// Variavel global para capturar o evento antes do React montar
-let deferredPromptGlobal: BeforeInstallPromptEvent | null = null
-
-if (typeof window !== "undefined") {
-  window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault()
-    deferredPromptGlobal = e as BeforeInstallPromptEvent
-  })
+declare global {
+  interface Window {
+    deferredInstallPrompt: BeforeInstallPromptEvent | null
+  }
 }
 
 export function PWAInstallButton() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
+  const [canInstall, setCanInstall] = useState(false)
   const [showButton, setShowButton] = useState(false)
   const [isInstalled, setIsInstalled] = useState(false)
 
   useEffect(() => {
-    // Verificar se já está instalado
+    // Verificar se já está instalado (standalone mode)
     const isStandalone = window.matchMedia("(display-mode: standalone)").matches
     if (isStandalone) {
       setIsInstalled(true)
       return
     }
 
-    // Pegar o evento global se já foi capturado
-    if (deferredPromptGlobal) {
-      setDeferredPrompt(deferredPromptGlobal)
+    // Verificar se o evento já foi capturado pelo script no head
+    if (window.deferredInstallPrompt) {
+      setCanInstall(true)
       setShowButton(true)
       return
     }
 
-    // Escutar novos eventos
-    const handler = (e: Event) => {
-      e.preventDefault()
-      const evt = e as BeforeInstallPromptEvent
-      deferredPromptGlobal = evt
-      setDeferredPrompt(evt)
-      setShowButton(true)
+    // Escutar evento customizado do script no head
+    const handleReady = () => {
+      if (window.deferredInstallPrompt) {
+        setCanInstall(true)
+        setShowButton(true)
+      }
     }
 
-    window.addEventListener("beforeinstallprompt", handler)
+    window.addEventListener("pwainstallready", handleReady)
 
-    // Mostrar botão após 1 segundo de qualquer forma
+    // Mostrar botão após 2 segundos mesmo sem o evento
     const timer = setTimeout(() => {
+      if (window.deferredInstallPrompt) {
+        setCanInstall(true)
+      }
       setShowButton(true)
-    }, 1000)
+    }, 2000)
 
     return () => {
-      window.removeEventListener("beforeinstallprompt", handler)
+      window.removeEventListener("pwainstallready", handleReady)
       clearTimeout(timer)
     }
   }, [])
 
   const handleInstall = async () => {
-    const prompt = deferredPrompt || deferredPromptGlobal
+    const prompt = window.deferredInstallPrompt
     
-    if (prompt) {
+    if (prompt && canInstall) {
       try {
         await prompt.prompt()
         const { outcome } = await prompt.userChoice
+        
         if (outcome === "accepted") {
           setShowButton(false)
           setIsInstalled(true)
-          localStorage.setItem("pwa-installed", "true")
         }
-      } catch (err) {
-        // Prompt já foi usado, mostrar instruções
+        
+        window.deferredInstallPrompt = null
+        setCanInstall(false)
+      } catch {
         showManualInstructions()
       }
-      deferredPromptGlobal = null
-      setDeferredPrompt(null)
     } else {
       showManualInstructions()
     }
   }
 
   const showManualInstructions = () => {
-    const isChrome = navigator.userAgent.includes("Chrome")
-    const isEdge = navigator.userAgent.includes("Edg")
-    
-    if (isChrome || isEdge) {
-      alert(
-        "Para instalar:\n\n" +
-        "1. Clique nos 3 pontinhos (⋮) no canto superior direito\n" +
-        "2. Clique em 'Instalar Capitão Burguer'\n\n" +
-        "Se não aparecer, atualize a página e tente novamente."
-      )
-    } else {
-      alert(
-        "Para instalar, use o Google Chrome ou Microsoft Edge.\n\n" +
-        "1. Abra este site no Chrome ou Edge\n" +
-        "2. Clique nos 3 pontinhos (⋮)\n" +
-        "3. Clique em 'Instalar app'"
-      )
-    }
+    alert(
+      "Para instalar:\n\n" +
+      "1. Clique nos 3 pontinhos (⋮) no canto superior direito do navegador\n" +
+      "2. Clique em 'Instalar Capitão Burguer'\n\n" +
+      "Se não aparecer, atualize a página e tente novamente."
+    )
   }
 
   const handleDismiss = () => {

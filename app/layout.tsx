@@ -53,6 +53,18 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon-192.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-capable" content="yes" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.deferredInstallPrompt = null;
+              window.addEventListener('beforeinstallprompt', function(e) {
+                e.preventDefault();
+                window.deferredInstallPrompt = e;
+                window.dispatchEvent(new Event('pwainstallready'));
+              });
+            `,
+          }}
+        />
       </head>
       <body className="font-sans antialiased min-h-screen bg-background text-foreground">
         {children}
