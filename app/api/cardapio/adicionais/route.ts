@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic"
 export async function GET() {
   try {
     const adicionais = await query<DbAddon>(
-      `SELECT * FROM ${SCHEMA}.addons ORDER BY display_order`
+      `SELECT * FROM ${SCHEMA}.addons ORDER BY name`
     )
     return NextResponse.json({ adicionais })
   } catch (error) {

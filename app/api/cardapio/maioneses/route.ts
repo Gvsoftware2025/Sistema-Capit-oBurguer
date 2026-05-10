@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic"
 export async function GET() {
   try {
     const maioneses = await query<DbMaionese>(
-      `SELECT * FROM ${SCHEMA}.maioneses ORDER BY display_order`
+      `SELECT * FROM ${SCHEMA}.maioneses ORDER BY name`
     )
     return NextResponse.json({ maioneses })
   } catch (error) {
