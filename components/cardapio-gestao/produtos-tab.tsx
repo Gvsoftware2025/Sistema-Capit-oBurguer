@@ -56,6 +56,7 @@ export function ProdutosTab() {
     name: "",
     description: "",
     price: "",
+    image_url: "",
     is_available: true,
   })
 
@@ -67,7 +68,7 @@ export function ProdutosTab() {
 
   const abrirCriar = () => {
     setEditando(null)
-    setForm({ category_id: "", name: "", description: "", price: "", is_available: true })
+    setForm({ category_id: "", name: "", description: "", price: "", image_url: "", is_available: true })
     setModalAberto(true)
   }
 
@@ -78,6 +79,7 @@ export function ProdutosTab() {
       name: prod.name,
       description: prod.description || "",
       price: prod.price.toString(),
+      image_url: prod.image_url || "",
       is_available: prod.is_available,
     })
     setModalAberto(true)
@@ -201,6 +203,7 @@ export function ProdutosTab() {
           <table className="w-full">
             <thead className="bg-card/50">
               <tr className="border-b border-border">
+                <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground w-16">Imagem</th>
                 <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Produto</th>
                 <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground hidden md:table-cell">Categoria</th>
                 <th className="text-right px-4 py-3 text-sm font-medium text-muted-foreground">Preço</th>
@@ -211,6 +214,20 @@ export function ProdutosTab() {
             <tbody>
               {produtosFiltrados.map((prod) => (
                 <tr key={prod.id} className="border-b border-border/50 hover:bg-card/30 transition-colors">
+                  <td className="px-4 py-3">
+                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-card border border-border flex items-center justify-center">
+                      {prod.image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={prod.image_url}
+                          alt={prod.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-muted-foreground text-xs">Sem foto</span>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-4 py-3">
                     <div>
                       <p className="font-medium">{prod.name}</p>
@@ -245,7 +262,7 @@ export function ProdutosTab() {
               ))}
               {produtosFiltrados.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
+                  <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
                     Nenhum produto encontrado
                   </td>
                 </tr>
@@ -305,6 +322,21 @@ export function ProdutosTab() {
                 onChange={(e) => setForm({ ...form, price: e.target.value })}
                 placeholder="0.00"
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="image_url">URL da Imagem</Label>
+              <Input
+                id="image_url"
+                value={form.image_url}
+                onChange={(e) => setForm({ ...form, image_url: e.target.value })}
+                placeholder="https://exemplo.com/imagem.jpg"
+              />
+              {form.image_url && (
+                <div className="mt-2 w-20 h-20 rounded-lg overflow-hidden border border-border">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={form.image_url} alt="Preview" className="w-full h-full object-cover" />
+                </div>
+              )}
             </div>
             <div className="flex items-center justify-between">
               <Label>Disponível</Label>

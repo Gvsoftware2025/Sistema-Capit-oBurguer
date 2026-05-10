@@ -45,6 +45,7 @@ export interface DbProduct {
   name: string
   description: string | null
   price: number
+  image_url: string | null
   display_order: number
   is_available: boolean
   created_at: Date

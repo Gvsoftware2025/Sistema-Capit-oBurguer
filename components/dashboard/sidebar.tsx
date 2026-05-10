@@ -57,12 +57,15 @@ export function Sidebar() {
       >
         {/* Logo */}
         <div className="flex flex-col items-center py-8 border-b border-sidebar-border/30">
-          <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-primary shadow-xl shadow-primary/40">
+          <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-primary shadow-xl shadow-primary/40 bg-black">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/logo.png"
+              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202026-04-10%20at%2015.50.06-o0cWN1nWinPuNHVHHeeJIwMV03NjoJ.jpeg"
               alt="Capitão Burguer"
               className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.src = "/logo.png"
+              }}
             />
           </div>
         </div>
