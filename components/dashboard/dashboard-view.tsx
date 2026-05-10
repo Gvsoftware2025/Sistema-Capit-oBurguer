@@ -22,7 +22,7 @@ export function DashboardView() {
   const [pedidoSelecionado, setPedidoSelecionado] = useState<Pedido | null>(null)
   const [modalAberto, setModalAberto] = useState(false)
   const [impressaoAutomatica, setImpressaoAutomatica] = useState(true)
-  const prevPedidosRef = useRef<string[]>([])
+  const prevPedidosRef = useRef<string[] | null>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
 
   const { data: pedidos = [], mutate } = useSWR<Pedido[]>("/api/pedidos", fetcher, {
@@ -37,14 +37,19 @@ export function DashboardView() {
   }, [])
 
   useEffect(() => {
-    const pedidosNovos = pedidos.filter((p) => p.status === "novo")
+    const pedidosNovos = pedidos.filter((p) => p.status === "novo" || p.status === "pendente")
     const idsNovos = pedidosNovos.map((p) => p.id)
     
+    // Na primeira vez, apenas inicializa
+    if (prevPedidosRef.current === null) {
+      prevPedidosRef.current = idsNovos
+      return
+    }
+    
     // Encontra pedidos que acabaram de chegar
-    const novosIds = idsNovos.filter((id) => !prevPedidosRef.current.includes(id))
-    const novosPedidosChegaram = novosIds.length > 0 && prevPedidosRef.current.length > 0
-
-    if (novosPedidosChegaram) {
+    const novosIds = idsNovos.filter((id) => !prevPedidosRef.current!.includes(id))
+    
+    if (novosIds.length > 0) {
       // Toca som se ativado
       if (somAtivado) {
         playOrderSound()

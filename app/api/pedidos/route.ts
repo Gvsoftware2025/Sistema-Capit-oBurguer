@@ -37,6 +37,8 @@ export async function GET(request: Request) {
       ORDER BY o.created_at DESC
     `)
 
+
+
     // Mapear para o formato do frontend
     const pedidosMapeados = pedidos.map((p) => ({
       id: p.id.toString(),
