@@ -81,3 +81,36 @@ export async function PATCH(
     )
   }
 }
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+
+    // Primeiro deleta os itens do pedido
+    await query(
+      `DELETE FROM ${SCHEMA}.order_items WHERE order_id = $1`,
+      [id]
+    )
+
+    // Depois deleta o pedido
+    const [pedido] = await query<DbOrder>(
+      `DELETE FROM ${SCHEMA}.orders WHERE id = $1 RETURNING *`,
+      [id]
+    )
+
+    if (!pedido) {
+      return NextResponse.json({ error: "Pedido não encontrado" }, { status: 404 })
+    }
+
+    return NextResponse.json({ success: true, id })
+  } catch (error) {
+    console.error("[API] Erro ao excluir pedido:", error)
+    return NextResponse.json(
+      { error: "Erro ao excluir pedido" },
+      { status: 500 }
+    )
+  }
+}

@@ -92,6 +92,14 @@ export function DashboardView() {
     mutate()
   }
 
+  const excluirPedido = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir este pedido?")) return
+    await fetch(`/api/pedidos/${id}`, {
+      method: "DELETE",
+    })
+    mutate()
+  }
+
   const pedidosAtivos = pedidos.filter((p) => p.status !== "finalizado")
   const pedidosFiltrados =
     filtroAtivo === "todos"
@@ -132,6 +140,7 @@ export function DashboardView() {
           onFinalizar={finalizarPedido}
           onAvancar={avancarPedido}
           onClickDetalhes={abrirDetalhes}
+          onExcluir={excluirPedido}
         />
       </div>
 

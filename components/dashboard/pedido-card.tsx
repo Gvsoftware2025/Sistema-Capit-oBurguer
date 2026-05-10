@@ -1,6 +1,6 @@
 "use client"
 
-import { Clock, Package, Truck, User, CheckCircle, Store } from "lucide-react"
+import { Clock, Package, Truck, User, CheckCircle, Store, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import type { Pedido } from "@/lib/types"
@@ -10,9 +10,10 @@ interface PedidoCardProps {
   onFinalizar: (id: string) => void
   onAvancar?: (id: string) => void
   onClickDetalhes?: (pedido: Pedido) => void
+  onExcluir?: (id: string) => void
 }
 
-export function PedidoCard({ pedido, onFinalizar, onAvancar, onClickDetalhes }: PedidoCardProps) {
+export function PedidoCard({ pedido, onFinalizar, onAvancar, onClickDetalhes, onExcluir }: PedidoCardProps) {
   const statusConfig: Record<string, { label: string; bgBadge: string; textBadge: string; border: string; labelColor: string; glow: string }> = {
     novo: {
       label: "NOVO",
@@ -107,7 +108,18 @@ export function PedidoCard({ pedido, onFinalizar, onAvancar, onClickDetalhes }: 
         <span className={cn("px-3 py-1 rounded text-[10px] font-bold tracking-wider", config.bgBadge, config.textBadge)}>
           {config.label}
         </span>
-        <span className="text-sm font-mono font-bold text-muted-foreground">#{pedido.numero}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-mono font-bold text-muted-foreground">#{pedido.numero}</span>
+          {onExcluir && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onExcluir(pedido.id) }}
+              className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-colors"
+              title="Excluir pedido"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Body */}
