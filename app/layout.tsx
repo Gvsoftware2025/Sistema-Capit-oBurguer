@@ -43,6 +43,21 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon-192.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-capable" content="yes" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                    console.log('SW registrado:', registration.scope);
+                  }).catch(function(error) {
+                    console.log('SW falhou:', error);
+                  });
+                });
+              }
+            `,
+          }}
+        />
       </head>
       <body className="font-sans antialiased min-h-screen bg-background text-foreground">
         {children}
