@@ -21,6 +21,11 @@ export const metadata: Metadata = {
   title: "Capitão Burguer — Sistema de Gestão",
   description:
     "Sistema de gestão de pedidos Capitão Burguer. Dashboard, pedidos em tempo real.",
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/icon-192.png",
+    apple: "/icon-192.png",
+  },
 }
 
 export const viewport: Viewport = {
@@ -35,7 +40,9 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={`dark bg-background ${inter.variable} ${cinzel.variable}`}>
       <head>
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="font-sans antialiased min-h-screen bg-background text-foreground">
         {children}
