@@ -28,8 +28,13 @@ const nextConfig = {
             key: 'Content-Type',
             value: 'application/manifest+json',
           },
+          {
+            key: 'Cache-Control',
+            value: 'no-cache',
+          },
         ],
       },
+      
     ]
   },
 }
