@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   description:
     "Sistema de gestão de pedidos Capitão Burguer. Dashboard, pedidos em tempo real.",
   generator: "v0.app",
-  manifest: "/manifest.json",
+  manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
