@@ -52,7 +52,7 @@ export default function RootLayout({
                 e.preventDefault();
                 window.pwaInstallPrompt = e;
               });
-              if ('serviceWorker' in navigator) {
+              if ('serviceWorker' in navigator && window.location.hostname.includes('vercel.app')) {
                 navigator.serviceWorker.register('/sw.js');
               }
             `,
