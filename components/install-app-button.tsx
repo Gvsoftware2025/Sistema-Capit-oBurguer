@@ -10,67 +10,64 @@ declare global {
 }
 
 export function InstallAppButton() {
-  const [canInstall, setCanInstall] = useState(false)
+  const [showButton, setShowButton] = useState(false)
   const [isInstalled, setIsInstalled] = useState(false)
+  const [dismissed, setDismissed] = useState(false)
 
   useEffect(() => {
-    // Verifica se ja esta instalado
+    // Verifica se ja esta instalado (modo standalone)
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setIsInstalled(true)
       return
     }
 
-    // Verifica se o prompt esta disponivel
-    const checkPrompt = () => {
-      if (window.pwaInstallPrompt) {
-        setCanInstall(true)
-      }
+    // Verifica se ja foi dispensado nesta sessao
+    if (sessionStorage.getItem('pwa-dismissed')) {
+      setDismissed(true)
+      return
     }
 
-    // Checa imediatamente
-    checkPrompt()
+    // Mostra o botao apos 2 segundos
+    const timer = setTimeout(() => {
+      setShowButton(true)
+    }, 2000)
 
-    // Checa a cada segundo por 10 segundos
-    const interval = setInterval(checkPrompt, 1000)
-    setTimeout(() => clearInterval(interval), 10000)
-
-    // Escuta o evento caso chegue depois
+    // Escuta o evento de instalacao
     const handler = (e: Event) => {
       e.preventDefault()
       window.pwaInstallPrompt = e
-      setCanInstall(true)
     }
     window.addEventListener('beforeinstallprompt', handler)
 
     return () => {
-      clearInterval(interval)
+      clearTimeout(timer)
       window.removeEventListener('beforeinstallprompt', handler)
     }
   }, [])
 
   const handleInstall = async () => {
-    if (!window.pwaInstallPrompt) {
-      return
+    // Se tem o prompt nativo, usa ele
+    if (window.pwaInstallPrompt) {
+      window.pwaInstallPrompt.prompt()
+      const result = await window.pwaInstallPrompt.userChoice
+      if (result.outcome === 'accepted') {
+        setIsInstalled(true)
+        setShowButton(false)
+      }
+      window.pwaInstallPrompt = null
+    } else {
+      // Se nao tem prompt, abre instrucoes
+      alert("Para instalar:\n\n1. Clique nos 3 pontinhos do navegador\n2. Clique em 'Instalar Capitao Burguer' ou 'Apps > Instalar'")
     }
-
-    // Chama o prompt nativo do navegador
-    window.pwaInstallPrompt.prompt()
-
-    const result = await window.pwaInstallPrompt.userChoice
-
-    if (result.outcome === 'accepted') {
-      setIsInstalled(true)
-      setCanInstall(false)
-    }
-
-    window.pwaInstallPrompt = null
   }
 
   const handleDismiss = () => {
-    setCanInstall(false)
+    setShowButton(false)
+    setDismissed(true)
+    sessionStorage.setItem('pwa-dismissed', 'true')
   }
 
-  if (isInstalled || !canInstall) return null
+  if (isInstalled || !showButton || dismissed) return null
 
   return (
     <div className="fixed bottom-6 right-6 z-[9999] animate-in slide-in-from-bottom-4 duration-300">
