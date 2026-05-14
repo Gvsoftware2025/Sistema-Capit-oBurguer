@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next"
 import { Inter, Cinzel } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Toaster } from "@/components/ui/sonner"
+import { InstallAppButton } from "@/components/install-app-button"
 import "./globals.css"
 
 const inter = Inter({
@@ -46,14 +47,13 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
+              window.pwaInstallPrompt = null;
+              window.addEventListener('beforeinstallprompt', function(e) {
+                e.preventDefault();
+                window.pwaInstallPrompt = e;
+              });
               if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').then(function(registration) {
-                    console.log('SW registrado:', registration.scope);
-                  }).catch(function(error) {
-                    console.log('SW falhou:', error);
-                  });
-                });
+                navigator.serviceWorker.register('/sw.js');
               }
             `,
           }}
@@ -61,6 +61,7 @@ export default function RootLayout({
       </head>
       <body className="font-sans antialiased min-h-screen bg-background text-foreground">
         {children}
+        <InstallAppButton />
         <Toaster theme="dark" richColors position="top-center" />
         {process.env.NODE_ENV === "production" && <Analytics />}
       </body>
