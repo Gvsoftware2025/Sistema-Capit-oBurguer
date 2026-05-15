@@ -4,128 +4,74 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Download, X } from "lucide-react"
 
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>
-}
-
-declare global {
-  interface Window {
-    deferredInstallPrompt: BeforeInstallPromptEvent | null
-    __TAURI__: unknown
-    __TAURI_INTERNALS__: unknown
-  }
-}
+// Link direto para o instalador .msi no GitHub Releases
+const INSTALLER_URL = "https://github.com/Gvsoftware2025/Sistema-Capit-oBurguer/releases/latest/download/Capitao.Burguer_1.0.0_x64_en-US.msi"
 
 export function PWAInstallButton() {
-  const [canInstall, setCanInstall] = useState(false)
   const [showButton, setShowButton] = useState(false)
-  const [isInstalled, setIsInstalled] = useState(false)
+  const [isDesktopApp, setIsDesktopApp] = useState(false)
 
   useEffect(() => {
-    // Se esta rodando no Tauri (app desktop), nao mostra o botao
-    const isTauri = typeof window !== 'undefined' && (
+    // Detecta se esta rodando no Tauri (app desktop)
+    const isTauri = 
       '__TAURI__' in window ||
       '__TAURI_INTERNALS__' in window ||
+      '__TAURI_IPC__' in window ||
       navigator.userAgent.includes('Tauri') ||
-      window.location.protocol === 'tauri:'
-    )
+      window.location.protocol === 'tauri:' ||
+      // Tauri 2 injeta essas variaveis
+      typeof (window as any).__TAURI_METADATA__ !== 'undefined'
     
-    if (isTauri) {
-      setIsInstalled(true)
+    // Detecta se ja esta instalado como PWA
+    const isStandalone = 
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.matchMedia("(display-mode: window-controls-overlay)").matches ||
+      (window.navigator as any).standalone === true
+    
+    if (isTauri || isStandalone) {
+      setIsDesktopApp(true)
       return
     }
 
-    // Verificar se já está instalado (standalone mode ou app desktop)
-    const isStandalone = window.matchMedia("(display-mode: standalone)").matches ||
-                         window.matchMedia("(display-mode: window-controls-overlay)").matches
-    if (isStandalone) {
-      setIsInstalled(true)
-      return
-    }
-
-    // Verificar se o evento já foi capturado pelo script no head
-    if (window.deferredInstallPrompt) {
-      setCanInstall(true)
-      setShowButton(true)
-      return
-    }
-
-    // Escutar evento customizado do script no head
-    const handleReady = () => {
-      if (window.deferredInstallPrompt) {
-        setCanInstall(true)
-        setShowButton(true)
-      }
-    }
-
-    window.addEventListener("pwainstallready", handleReady)
-
-    // Mostrar botão após 2 segundos mesmo sem o evento
+    // Mostra o botao apos 2 segundos apenas no navegador web
     const timer = setTimeout(() => {
-      if (window.deferredInstallPrompt) {
-        setCanInstall(true)
-      }
       setShowButton(true)
     }, 2000)
 
-    return () => {
-      window.removeEventListener("pwainstallready", handleReady)
-      clearTimeout(timer)
-    }
+    return () => clearTimeout(timer)
   }, [])
 
-  const handleInstall = async () => {
-    const prompt = window.deferredInstallPrompt
-    
-    if (prompt && canInstall) {
-      try {
-        await prompt.prompt()
-        const { outcome } = await prompt.userChoice
-        
-        if (outcome === "accepted") {
-          setShowButton(false)
-          setIsInstalled(true)
-        }
-        
-        window.deferredInstallPrompt = null
-        setCanInstall(false)
-      } catch {
-        showManualInstructions()
-      }
-    } else {
-      showManualInstructions()
-    }
-  }
-
-  const showManualInstructions = () => {
-    alert(
-      "Para instalar:\n\n" +
-      "1. Clique nos 3 pontinhos no canto superior direito do navegador\n" +
-      "2. Clique em 'Instalar Capitao Burguer'\n\n" +
-      "Ou baixe o instalador .exe em: github.com/Gvsoftware2025/Sistema-Capit-oBurguer/releases"
-    )
+  const handleDownload = () => {
+    // Baixa o instalador diretamente
+    window.open(INSTALLER_URL, '_blank')
   }
 
   const handleDismiss = () => {
     setShowButton(false)
+    sessionStorage.setItem('install-dismissed', 'true')
   }
 
-  if (isInstalled || !showButton) return null
+  // Nao mostra se: esta no app desktop, ja dispensou, ou ainda nao carregou
+  if (isDesktopApp || !showButton) return null
+
+  // Verifica se ja foi dispensado nesta sessao
+  if (typeof window !== 'undefined' && sessionStorage.getItem('install-dismissed')) {
+    return null
+  }
 
   return (
     <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 bg-card border-2 border-primary rounded-lg p-3 shadow-lg shadow-primary/20 animate-in slide-in-from-bottom-4">
       <div className="flex-1 mr-2">
-        <p className="text-sm font-bold text-foreground">Instalar App</p>
-        <p className="text-xs text-muted-foreground">Acesso rapido na area de trabalho</p>
+        <p className="text-sm font-bold text-foreground">Instalar App Desktop</p>
+        <p className="text-xs text-muted-foreground">Baixar instalador para Windows</p>
       </div>
       <Button
-        onClick={handleInstall}
+        onClick={handleDownload}
         size="sm"
         className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
       >
         <Download className="h-4 w-4 mr-1" />
-        Instalar
+        Baixar
       </Button>
       <button
         onClick={handleDismiss}
