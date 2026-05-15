@@ -12,12 +12,22 @@ export function PWAInstallButton() {
 
   useEffect(() => {
     // Detecta se esta rodando no Tauri (app desktop)
-    const isTauri = 
+    // Verifica parametro na URL ou localStorage
+    const urlParams = new URLSearchParams(window.location.search)
+    const isTauriParam = urlParams.get('app') === 'desktop'
+    
+    // Se veio com parametro, salva no localStorage para futuras navegacoes
+    if (isTauriParam) {
+      localStorage.setItem('is-desktop-app', 'true')
+    }
+    
+    const isDesktopFromStorage = localStorage.getItem('is-desktop-app') === 'true'
+    
+    // Outras deteccoes do Tauri
+    const isTauriWindow = 
       '__TAURI__' in window ||
       '__TAURI_INTERNALS__' in window ||
       '__TAURI_IPC__' in window ||
-      navigator.userAgent.includes('Tauri') ||
-      window.location.protocol === 'tauri:' ||
       typeof (window as any).__TAURI_METADATA__ !== 'undefined'
     
     // Detecta se ja esta instalado como PWA
@@ -26,7 +36,7 @@ export function PWAInstallButton() {
       window.matchMedia("(display-mode: window-controls-overlay)").matches ||
       (window.navigator as any).standalone === true
     
-    if (isTauri || isStandalone) {
+    if (isTauriParam || isDesktopFromStorage || isTauriWindow || isStandalone) {
       setIsDesktopApp(true)
       return
     }
