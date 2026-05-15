@@ -2,14 +2,13 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Download, X } from "lucide-react"
-
-// Link direto para o instalador .msi no GitHub Releases
-const INSTALLER_URL = "https://github.com/Gvsoftware2025/Sistema-Capit-oBurguer/releases/latest/download/Capitao.Burguer_1.0.0_x64_en-US.msi"
+import { Download, X, Loader2 } from "lucide-react"
 
 export function PWAInstallButton() {
   const [showButton, setShowButton] = useState(false)
   const [isDesktopApp, setIsDesktopApp] = useState(false)
+  const [installerUrl, setInstallerUrl] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     // Detecta se esta rodando no Tauri (app desktop)
@@ -19,7 +18,6 @@ export function PWAInstallButton() {
       '__TAURI_IPC__' in window ||
       navigator.userAgent.includes('Tauri') ||
       window.location.protocol === 'tauri:' ||
-      // Tauri 2 injeta essas variaveis
       typeof (window as any).__TAURI_METADATA__ !== 'undefined'
     
     // Detecta se ja esta instalado como PWA
@@ -33,6 +31,16 @@ export function PWAInstallButton() {
       return
     }
 
+    // Busca a URL do instalador no Blob
+    fetch('/api/installer')
+      .then(res => res.json())
+      .then(data => {
+        if (data.available && data.url) {
+          setInstallerUrl(data.url)
+        }
+      })
+      .catch(() => {})
+
     // Mostra o botao apos 2 segundos apenas no navegador web
     const timer = setTimeout(() => {
       setShowButton(true)
@@ -42,8 +50,19 @@ export function PWAInstallButton() {
   }, [])
 
   const handleDownload = () => {
-    // Baixa o instalador diretamente
-    window.open(INSTALLER_URL, '_blank')
+    if (installerUrl) {
+      setIsLoading(true)
+      // Cria um link temporario para forcar download
+      const link = document.createElement('a')
+      link.href = installerUrl
+      link.download = 'CapitaoBurguer-Setup.exe'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      setTimeout(() => setIsLoading(false), 2000)
+    } else {
+      alert('Instalador nao disponivel ainda. Entre em contato com o suporte.')
+    }
   }
 
   const handleDismiss = () => {
@@ -68,10 +87,15 @@ export function PWAInstallButton() {
       <Button
         onClick={handleDownload}
         size="sm"
+        disabled={isLoading}
         className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
       >
-        <Download className="h-4 w-4 mr-1" />
-        Baixar
+        {isLoading ? (
+          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+        ) : (
+          <Download className="h-4 w-4 mr-1" />
+        )}
+        {isLoading ? 'Baixando...' : 'Baixar'}
       </Button>
       <button
         onClick={handleDismiss}
