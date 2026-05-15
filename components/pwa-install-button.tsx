@@ -24,13 +24,21 @@ export function PWAInstallButton() {
 
   useEffect(() => {
     // Se esta rodando no Tauri (app desktop), nao mostra o botao
-    if (typeof window !== 'undefined' && (window.__TAURI__ || window.__TAURI_INTERNALS__)) {
+    const isTauri = typeof window !== 'undefined' && (
+      '__TAURI__' in window ||
+      '__TAURI_INTERNALS__' in window ||
+      navigator.userAgent.includes('Tauri') ||
+      window.location.protocol === 'tauri:'
+    )
+    
+    if (isTauri) {
       setIsInstalled(true)
       return
     }
 
-    // Verificar se já está instalado (standalone mode)
-    const isStandalone = window.matchMedia("(display-mode: standalone)").matches
+    // Verificar se já está instalado (standalone mode ou app desktop)
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches ||
+                         window.matchMedia("(display-mode: window-controls-overlay)").matches
     if (isStandalone) {
       setIsInstalled(true)
       return
