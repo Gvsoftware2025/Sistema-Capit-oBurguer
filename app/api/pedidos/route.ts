@@ -152,13 +152,28 @@ export async function POST(request: Request) {
 
     console.log("[v0] Pedido criado:", pedido.id, "Numero:", pedido.order_number)
 
-    // Inserir itens
+    // Inserir itens com todos os detalhes
     for (const item of itens) {
+      // Extrair detalhes do item
+      const variacao = item.variacao || item.observacao || null
+      const maionese = item.maionese || null
+      const extraMaioneses = item.extraMaioneses ? JSON.stringify(item.extraMaioneses) : null
+      const adicionais = item.adicionais ? JSON.stringify(item.adicionais) : null
+      
       await query(
         `INSERT INTO ${SCHEMA}.order_items 
-          (order_id, product_name, quantity, item_total)
-         VALUES ($1, $2, $3, $4)`,
-        [pedido.id, item.nome, item.quantidade, Number(item.preco) * Number(item.quantidade)]
+          (order_id, product_name, quantity, variation_name, maionese, extra_maioneses, addons, item_total)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [
+          pedido.id, 
+          item.nome, 
+          item.quantidade, 
+          variacao,
+          maionese,
+          extraMaioneses,
+          adicionais,
+          Number(item.preco) * Number(item.quantidade)
+        ]
       )
     }
 
