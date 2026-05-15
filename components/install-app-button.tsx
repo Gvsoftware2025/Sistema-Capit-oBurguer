@@ -6,6 +6,7 @@ import { Download, X } from "lucide-react"
 declare global {
   interface Window {
     pwaInstallPrompt: any
+    __TAURI__: any
   }
 }
 
@@ -15,7 +16,13 @@ export function InstallAppButton() {
   const [dismissed, setDismissed] = useState(false)
 
   useEffect(() => {
-    // Verifica se ja esta instalado (modo standalone)
+    // Se esta rodando no Tauri (app desktop), nao mostra o botao
+    if (typeof window !== 'undefined' && window.__TAURI__) {
+      setIsInstalled(true)
+      return
+    }
+
+    // Verifica se ja esta instalado (modo standalone/PWA)
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setIsInstalled(true)
       return
@@ -32,7 +39,7 @@ export function InstallAppButton() {
       setShowButton(true)
     }, 2000)
 
-    // Escuta o evento de instalacao
+    // Escuta o evento de instalacao PWA
     const handler = (e: Event) => {
       e.preventDefault()
       window.pwaInstallPrompt = e
@@ -45,20 +52,9 @@ export function InstallAppButton() {
     }
   }, [])
 
-  const handleInstall = async () => {
-    // Se tem o prompt nativo, usa ele
-    if (window.pwaInstallPrompt) {
-      window.pwaInstallPrompt.prompt()
-      const result = await window.pwaInstallPrompt.userChoice
-      if (result.outcome === 'accepted') {
-        setIsInstalled(true)
-        setShowButton(false)
-      }
-      window.pwaInstallPrompt = null
-    } else {
-      // Se nao tem prompt, abre instrucoes
-      alert("Para instalar:\n\n1. Clique nos 3 pontinhos do navegador\n2. Clique em 'Instalar Capitao Burguer' ou 'Apps > Instalar'")
-    }
+  const handleInstall = () => {
+    // Abre a pagina de download do instalador
+    window.open('https://github.com/Gvsoftware2025/Sistema-Capit-oBurguer/releases', '_blank')
   }
 
   const handleDismiss = () => {
@@ -74,14 +70,14 @@ export function InstallAppButton() {
       <div className="flex items-center gap-3 bg-yellow-600 text-black rounded-xl px-4 py-3 shadow-2xl">
         <Download className="h-5 w-5" />
         <div>
-          <p className="font-bold text-sm">Instalar App</p>
-          <p className="text-xs opacity-80">Acesso rapido</p>
+          <p className="font-bold text-sm">Instalar App Desktop</p>
+          <p className="text-xs opacity-80">Baixar instalador .exe</p>
         </div>
         <button
           onClick={handleInstall}
           className="bg-black text-white font-bold px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
         >
-          Instalar
+          Baixar
         </button>
         <button onClick={handleDismiss} className="p-1 hover:bg-yellow-700 rounded">
           <X className="h-4 w-4" />
