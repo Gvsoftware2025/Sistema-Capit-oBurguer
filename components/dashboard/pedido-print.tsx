@@ -113,10 +113,24 @@ export function PedidoPrint({ pedido }: PedidoPrintProps) {
 }
 
 export function imprimirPedido(pedido: Pedido) {
-  // Cria uma janela de impressao
-  const printWindow = window.open("", "_blank", "width=300,height=600")
-  if (!printWindow) {
-    alert("Permita popups para imprimir")
+  // Remove iframe anterior se existir
+  const oldFrame = document.getElementById("print-frame")
+  if (oldFrame) oldFrame.remove()
+
+  // Cria iframe oculto para impressao (funciona sem popup)
+  const iframe = document.createElement("iframe")
+  iframe.id = "print-frame"
+  iframe.style.position = "fixed"
+  iframe.style.right = "0"
+  iframe.style.bottom = "0"
+  iframe.style.width = "0"
+  iframe.style.height = "0"
+  iframe.style.border = "none"
+  document.body.appendChild(iframe)
+
+  const doc = iframe.contentWindow?.document
+  if (!doc) {
+    alert("Erro ao preparar impressao")
     return
   }
 
@@ -215,13 +229,20 @@ export function imprimirPedido(pedido: Pedido) {
       <script>
         window.onload = function() {
           window.print();
-          setTimeout(function() { window.close(); }, 500);
         }
       </script>
     </body>
     </html>
   `
 
-  printWindow.document.write(html)
-  printWindow.document.close()
+  doc.open()
+  doc.write(html)
+  doc.close()
+
+  // Aguarda carregar e imprime
+  iframe.onload = () => {
+    setTimeout(() => {
+      iframe.contentWindow?.print()
+    }, 100)
+  }
 }
