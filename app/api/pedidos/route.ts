@@ -108,8 +108,14 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
+    console.log("[v0] Pedido recebido:", JSON.stringify(body, null, 2))
 
     const cliente = String(body.cliente ?? "").trim()
+    const telefone = String(body.telefone ?? "").trim()
+    const endereco = String(body.endereco ?? "").trim()
+    const tipo = body.tipo === "entrega" ? "entregar" : "retirar"
+    const pagamento = body.pagamento || "dinheiro"
+    const observacao = String(body.observacao ?? "").trim()
     const itens = Array.isArray(body.itens) ? body.itens : []
 
     if (!cliente) {
@@ -138,11 +144,13 @@ export async function POST(request: Request) {
     // Inserir pedido
     const [pedido] = await query<DbOrder>(
       `INSERT INTO ${SCHEMA}.orders 
-        (order_number, customer_name, delivery_type, payment_method, subtotal, delivery_fee, total, status)
-       VALUES ($1, $2, 'retirar', 'dinheiro', $3, 0, $3, 'pendente')
+        (order_number, customer_name, customer_phone, customer_address, delivery_type, payment_method, subtotal, delivery_fee, total, status, notes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 0, $7, 'pendente', $8)
        RETURNING *`,
-      [max_number, cliente, total]
+      [max_number, cliente, telefone || null, endereco || null, tipo, pagamento, total, observacao || null]
     )
+
+    console.log("[v0] Pedido criado:", pedido.id, "Numero:", pedido.order_number)
 
     // Inserir itens
     for (const item of itens) {
