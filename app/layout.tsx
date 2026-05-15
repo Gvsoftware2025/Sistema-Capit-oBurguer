@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next"
 import { Inter, Cinzel } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Toaster } from "@/components/ui/sonner"
-import { InstallAppButton } from "@/components/install-app-button"
 import "./globals.css"
 
 const inter = Inter({
@@ -61,7 +60,6 @@ export default function RootLayout({
       </head>
       <body className="font-sans antialiased min-h-screen bg-background text-foreground">
         {children}
-        <InstallAppButton />
         <Toaster theme="dark" richColors position="top-center" />
         {process.env.NODE_ENV === "production" && <Analytics />}
       </body>
