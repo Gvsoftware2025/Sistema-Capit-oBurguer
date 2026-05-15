@@ -12,6 +12,8 @@ interface BeforeInstallPromptEvent extends Event {
 declare global {
   interface Window {
     deferredInstallPrompt: BeforeInstallPromptEvent | null
+    __TAURI__: unknown
+    __TAURI_INTERNALS__: unknown
   }
 }
 
@@ -21,6 +23,12 @@ export function PWAInstallButton() {
   const [isInstalled, setIsInstalled] = useState(false)
 
   useEffect(() => {
+    // Se esta rodando no Tauri (app desktop), nao mostra o botao
+    if (typeof window !== 'undefined' && (window.__TAURI__ || window.__TAURI_INTERNALS__)) {
+      setIsInstalled(true)
+      return
+    }
+
     // Verificar se já está instalado (standalone mode)
     const isStandalone = window.matchMedia("(display-mode: standalone)").matches
     if (isStandalone) {
@@ -85,9 +93,9 @@ export function PWAInstallButton() {
   const showManualInstructions = () => {
     alert(
       "Para instalar:\n\n" +
-      "1. Clique nos 3 pontinhos (⋮) no canto superior direito do navegador\n" +
-      "2. Clique em 'Instalar Capitão Burguer'\n\n" +
-      "Se não aparecer, atualize a página e tente novamente."
+      "1. Clique nos 3 pontinhos no canto superior direito do navegador\n" +
+      "2. Clique em 'Instalar Capitao Burguer'\n\n" +
+      "Ou baixe o instalador .exe em: github.com/Gvsoftware2025/Sistema-Capit-oBurguer/releases"
     )
   }
 
@@ -101,7 +109,7 @@ export function PWAInstallButton() {
     <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 bg-card border-2 border-primary rounded-lg p-3 shadow-lg shadow-primary/20 animate-in slide-in-from-bottom-4">
       <div className="flex-1 mr-2">
         <p className="text-sm font-bold text-foreground">Instalar App</p>
-        <p className="text-xs text-muted-foreground">Acesso rápido na área de trabalho</p>
+        <p className="text-xs text-muted-foreground">Acesso rapido na area de trabalho</p>
       </div>
       <Button
         onClick={handleInstall}
