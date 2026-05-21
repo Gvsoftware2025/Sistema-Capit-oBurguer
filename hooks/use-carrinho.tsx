@@ -18,13 +18,14 @@ export type CarrinhoItem = {
   quantidade: number
   imagem: string
   observacao?: string
+  acompanhamentos?: string  // Opcoes especiais como "BATATA COM: Catupiry, KIBE: Tradicional"
 }
 
 type CarrinhoContext = {
   itens: CarrinhoItem[]
   total: number
   totalItens: number
-  adicionar: (produto: Produto, quantidade?: number) => void
+  adicionar: (produto: Produto, quantidade?: number, acompanhamentos?: string) => void
   remover: (produtoId: string) => void
   alterarQuantidade: (produtoId: string, quantidade: number) => void
   limpar: () => void
@@ -53,12 +54,28 @@ export function CarrinhoProvider({ children }: { children: ReactNode }) {
     } catch {}
   }, [itens, hidratado])
 
-  const adicionar = useCallback((produto: Produto, quantidade = 1) => {
+  const adicionar = useCallback((produto: Produto, quantidade = 1, acompanhamentos?: string) => {
     setItens((prev) => {
-      const existe = prev.find((i) => i.produtoId === produto.id)
+      // Se tem acompanhamentos, sempre cria novo item (cada combinacao e unica)
+      if (acompanhamentos) {
+        return [
+          ...prev,
+          {
+            produtoId: `${produto.id}-${Date.now()}`,
+            nome: produto.nome,
+            preco: produto.preco,
+            quantidade,
+            imagem: produto.imagem,
+            acompanhamentos,
+          },
+        ]
+      }
+      
+      // Sem acompanhamentos, agrupa como antes
+      const existe = prev.find((i) => i.produtoId === produto.id && !i.acompanhamentos)
       if (existe) {
         return prev.map((i) =>
-          i.produtoId === produto.id
+          i.produtoId === produto.id && !i.acompanhamentos
             ? { ...i, quantidade: i.quantidade + quantidade }
             : i,
         )

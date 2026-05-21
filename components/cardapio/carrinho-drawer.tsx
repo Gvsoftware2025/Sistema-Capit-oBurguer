@@ -66,6 +66,7 @@ export function CarrinhoDrawer() {
             nome: i.nome,
             preco: i.preco,
             quantidade: i.quantidade,
+            acompanhamentos: i.acompanhamentos,
           })),
         }),
       })
@@ -150,6 +151,11 @@ export function CarrinhoDrawer() {
                     <p className="text-sm font-semibold leading-tight">
                       {item.nome}
                     </p>
+                    {item.acompanhamentos && (
+                      <p className="text-xs text-amber-500 font-medium">
+                        {item.acompanhamentos}
+                      </p>
+                    )}
                     <p className="text-xs text-muted-foreground">
                       R$ {item.preco.toFixed(2)}
                     </p>
