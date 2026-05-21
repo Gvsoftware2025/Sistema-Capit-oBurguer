@@ -105,6 +105,14 @@ export function DashboardView() {
     mutate()
   }
 
+  const excluirTodosPedidos = async () => {
+    if (!confirm("Tem certeza que deseja excluir TODOS os pedidos? Esta acao nao pode ser desfeita.")) return
+    await fetch("/api/pedidos", {
+      method: "DELETE",
+    })
+    mutate()
+  }
+
   const pedidosAtivos = pedidos.filter((p) => p.status !== "finalizado")
   const pedidosFiltrados =
     filtroAtivo === "todos"
@@ -137,6 +145,8 @@ export function DashboardView() {
         contagens={contagens}
         ordenacao={ordenacao}
         onOrdenacaoChange={setOrdenacao}
+        onExcluirTodos={excluirTodosPedidos}
+        temPedidos={pedidosAtivos.length > 0}
       />
 
       <div className="flex-1 overflow-hidden">

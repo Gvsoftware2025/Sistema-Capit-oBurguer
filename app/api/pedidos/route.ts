@@ -105,6 +105,23 @@ export async function GET(request: Request) {
   }
 }
 
+export async function DELETE() {
+  try {
+    // Primeiro excluir os itens dos pedidos
+    await query(`DELETE FROM ${SCHEMA}.order_items`)
+    // Depois excluir os pedidos
+    await query(`DELETE FROM ${SCHEMA}.orders`)
+
+    return NextResponse.json({ success: true, message: "Todos os pedidos foram excluídos" })
+  } catch (error) {
+    console.error("[API] Erro ao excluir todos os pedidos:", error)
+    return NextResponse.json(
+      { error: "Erro ao excluir pedidos" },
+      { status: 500 }
+    )
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
