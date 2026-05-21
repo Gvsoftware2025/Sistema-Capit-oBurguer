@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
-import { Plus } from "lucide-react"
+import { Plus, Trash2 } from "lucide-react"
 import {
   Select,
   SelectContent,
@@ -24,6 +24,8 @@ interface FiltrosPedidosProps {
   }
   ordenacao: string
   onOrdenacaoChange: (ordenacao: string) => void
+  onExcluirTodos?: () => void
+  temPedidos?: boolean
 }
 
 export function FiltrosPedidos({
@@ -32,6 +34,8 @@ export function FiltrosPedidos({
   contagens,
   ordenacao,
   onOrdenacaoChange,
+  onExcluirTodos,
+  temPedidos,
 }: FiltrosPedidosProps) {
   const router = useRouter()
 
@@ -56,13 +60,26 @@ export function FiltrosPedidos({
   return (
     <div className="px-3 sm:px-4 lg:px-6 py-3 space-y-3 bg-gradient-to-b from-card/50 to-transparent border-b border-border/30 shrink-0">
       {/* Botão Novo Pedido */}
-      <button
-        onClick={() => router.push("/dashboard/novo-pedido")}
-        className="w-full flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-base sm:text-lg transition-all duration-200 bg-gradient-to-r from-primary to-amber-500 text-primary-foreground shadow-lg hover:brightness-110 active:scale-[0.99] border border-primary/40"
-      >
-        <Plus className="h-5 w-5" />
-        <span>NOVO PEDIDO</span>
-      </button>
+      <div className="flex gap-2">
+        <button
+          onClick={() => router.push("/dashboard/novo-pedido")}
+          className="flex-1 flex items-center justify-center gap-3 py-4 rounded-xl font-bold text-base sm:text-lg transition-all duration-200 bg-gradient-to-r from-primary to-amber-500 text-primary-foreground shadow-lg hover:brightness-110 active:scale-[0.99] border border-primary/40"
+        >
+          <Plus className="h-5 w-5" />
+          <span>NOVO PEDIDO</span>
+        </button>
+        
+        {onExcluirTodos && temPedidos && (
+          <button
+            onClick={onExcluirTodos}
+            className="flex items-center justify-center gap-2 px-4 py-4 rounded-xl font-bold text-sm transition-all duration-200 bg-red-600 hover:bg-red-700 text-white shadow-lg hover:shadow-red-500/30 active:scale-[0.99] border border-red-500/40"
+            title="Remover todos os pedidos"
+          >
+            <Trash2 className="h-5 w-5" />
+            <span className="hidden sm:inline">LIMPAR TODOS</span>
+          </button>
+        )}
+      </div>
 
       {/* Filtros + Ordenação */}
       <div className="flex items-center gap-2">
