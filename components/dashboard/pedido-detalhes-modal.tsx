@@ -195,6 +195,13 @@ export function PedidoDetalhesModal({
                           Obs: {item.observacao}
                         </p>
                       )}
+
+                      {/* Acompanhamentos especiais (ex: Batata com: Catupiry, Kibe: Tradicional) */}
+                      {item.acompanhamentos && (
+                        <p className="text-xs text-amber-600 mt-1 ml-8 font-semibold">
+                          {item.acompanhamentos}
+                        </p>
+                      )}
                     </div>
                     <span className="font-bold text-primary shrink-0">
                       R$ {(item.preco * item.quantidade).toFixed(2)}

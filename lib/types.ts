@@ -33,6 +33,7 @@ export type ItemPedido = {
   maionese?: string
   extraMaioneses?: string[]
   adicionais?: Adicional[]
+  acompanhamentos?: string  // Para opcoes especiais como "Batata com: Catupiry, Kibe: Tradicional"
   observacao?: string
 }
 

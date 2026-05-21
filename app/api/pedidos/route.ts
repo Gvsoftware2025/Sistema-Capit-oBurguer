@@ -27,6 +27,7 @@ export async function GET(request: Request) {
             'maionese', oi.maionese,
             'extraMaioneses', oi.extra_maioneses,
             'addons', oi.addons,
+            'acompanhamentos', oi.acompanhamentos,
             'itemTotal', oi.item_total
           )
         ) FILTER (WHERE oi.id IS NOT NULL), '[]') as items
@@ -93,6 +94,7 @@ export async function GET(request: Request) {
           maionese: it.maionese,
           extraMaioneses: extraMaioParsed,
           adicionais: adicionaisParsed,
+          acompanhamentos: it.acompanhamentos,
           preco: Number(it.itemTotal) / it.quantity,
         }
       }),
@@ -176,11 +178,12 @@ export async function POST(request: Request) {
       const maionese = item.maionese || null
       const extraMaioneses = item.extraMaioneses ? JSON.stringify(item.extraMaioneses) : null
       const adicionais = item.adicionais ? JSON.stringify(item.adicionais) : null
+      const acompanhamentos = item.acompanhamentos || null
       
       await query(
         `INSERT INTO ${SCHEMA}.order_items 
-          (order_id, product_name, quantity, variation_name, maionese, extra_maioneses, addons, item_total)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+          (order_id, product_name, quantity, variation_name, maionese, extra_maioneses, addons, acompanhamentos, item_total)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
         [
           pedido.id, 
           item.nome, 
@@ -189,6 +192,7 @@ export async function POST(request: Request) {
           maionese,
           extraMaioneses,
           adicionais,
+          acompanhamentos,
           Number(item.preco) * Number(item.quantidade)
         ]
       )

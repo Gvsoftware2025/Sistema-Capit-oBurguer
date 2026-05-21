@@ -23,6 +23,7 @@ export function DashboardView() {
   const [modalAberto, setModalAberto] = useState(false)
   const [impressaoAutomatica, setImpressaoAutomatica] = useState(true)
   const prevPedidosRef = useRef<string[] | null>(null)
+  const impressoesRef = useRef<Set<string>>(new Set()) // Controle de pedidos já impressos
   const audioContextRef = useRef<AudioContext | null>(null)
 
   const { data: pedidos = [], mutate } = useSWR<Pedido[]>("/api/pedidos", fetcher, {
@@ -55,11 +56,15 @@ export function DashboardView() {
         playOrderSound()
       }
       
-      // Impressao automatica
+      // Impressao automatica - evita duplicatas
       if (impressaoAutomatica) {
         novosIds.forEach((id) => {
+          // Verifica se já imprimiu esse pedido
+          if (impressoesRef.current.has(id)) return
+          
           const pedido = pedidos.find((p) => p.id === id)
           if (pedido) {
+            impressoesRef.current.add(id) // Marca como impresso
             setTimeout(() => imprimirPedido(pedido), 500)
           }
         })

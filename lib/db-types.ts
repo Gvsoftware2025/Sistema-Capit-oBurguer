@@ -26,6 +26,7 @@ export interface DbOrderItem {
   maionese: string | null
   extra_maioneses: string[] | null
   addons: string[] | null
+  acompanhamentos: string | null  // Para guardar opcoes especiais como "Batata com: Catupiry, Kibe: Tradicional"
   item_total: number
 }
 

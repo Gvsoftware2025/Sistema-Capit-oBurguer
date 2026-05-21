@@ -86,6 +86,11 @@ export function PedidoPrint({ pedido }: PedidoPrintProps) {
             {item.observacao && (
               <p className="text-xs pl-2 italic">OBS: {item.observacao}</p>
             )}
+
+            {/* Acompanhamentos especiais (ex: Batata com: Catupiry, Kibe: Tradicional) */}
+            {item.acompanhamentos && (
+              <p className="text-xs pl-2 font-bold text-amber-700">{item.acompanhamentos}</p>
+            )}
           </div>
         ))}
       </div>
@@ -206,6 +211,7 @@ export function imprimirPedido(pedido: Pedido) {
                 return `<p class="small pl">+ ${nome} ${qtd > 1 ? "("+qtd+"x)" : ""} ${preco > 0 ? "R$ "+(preco * qtd).toFixed(2) : ""}</p>`
               }).join("") : ""}
             ${item.observacao ? `<p class="small pl">OBS: ${item.observacao}</p>` : ""}
+            ${item.acompanhamentos ? `<p class="small pl" style="font-weight:bold;color:#92400e;">${item.acompanhamentos}</p>` : ""}
           </div>
         `).join("")}
       </div>
@@ -227,9 +233,7 @@ export function imprimirPedido(pedido: Pedido) {
       </div>
 
       <script>
-        window.onload = function() {
-          window.print();
-        }
+        // Impressao sera chamada pelo iframe.onload
       </script>
     </body>
     </html>
@@ -239,10 +243,8 @@ export function imprimirPedido(pedido: Pedido) {
   doc.write(html)
   doc.close()
 
-  // Aguarda carregar e imprime
-  iframe.onload = () => {
-    setTimeout(() => {
-      iframe.contentWindow?.print()
-    }, 100)
-  }
+  // Aguarda carregar e imprime UMA VEZ
+  setTimeout(() => {
+    iframe.contentWindow?.print()
+  }, 300)
 }

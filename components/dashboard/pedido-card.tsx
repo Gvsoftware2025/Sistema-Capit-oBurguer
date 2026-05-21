@@ -143,9 +143,15 @@ export function PedidoCard({ pedido, onFinalizar, onAvancar, onClickDetalhes, on
           </p>
           <ul className="space-y-1.5 max-h-24 overflow-y-auto scrollbar-thin">
             {pedido.itens.map((item, i) => (
-              <li key={i} className="text-sm flex items-start gap-2">
-                <span className="text-muted-foreground font-mono text-xs">{item.quantidade}x</span>
-                <span className="truncate">{item.nome}</span>
+              <li key={i} className="text-sm">
+                <div className="flex items-start gap-2">
+                  <span className="text-muted-foreground font-mono text-xs">{item.quantidade}x</span>
+                  <span className="truncate">{item.nome}</span>
+                </div>
+                {/* Acompanhamentos especiais */}
+                {item.acompanhamentos && (
+                  <p className="text-[10px] text-amber-500 ml-5 font-medium">{item.acompanhamentos}</p>
+                )}
               </li>
             ))}
           </ul>
