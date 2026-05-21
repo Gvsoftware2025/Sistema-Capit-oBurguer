@@ -47,6 +47,11 @@ export function PedidoPrint({ pedido }: PedidoPrintProps) {
               <span>R$ {(item.preco * item.quantidade).toFixed(2)}</span>
             </div>
             
+            {/* Acompanhamentos especiais - PRIMEIRO para destaque */}
+            {item.acompanhamentos && (
+              <p className="text-xs pl-2 font-bold" style={{ color: "#b45309" }}>{item.acompanhamentos}</p>
+            )}
+
             {/* Variacao */}
             {item.variacao && (
               <p className="text-xs pl-2">Tam: {item.variacao}</p>
@@ -86,11 +91,6 @@ export function PedidoPrint({ pedido }: PedidoPrintProps) {
             {item.observacao && (
               <p className="text-xs pl-2 italic">OBS: {item.observacao}</p>
             )}
-
-            {/* Acompanhamentos especiais (ex: Batata com: Catupiry, Kibe: Tradicional) */}
-            {item.acompanhamentos && (
-              <p className="text-xs pl-2 font-bold text-amber-700">{item.acompanhamentos}</p>
-            )}
           </div>
         ))}
       </div>
@@ -122,7 +122,7 @@ export function imprimirPedido(pedido: Pedido) {
   const oldFrame = document.getElementById("print-frame")
   if (oldFrame) oldFrame.remove()
 
-  // Cria iframe oculto para impressao (funciona sem popup)
+  // Cria iframe oculto para impressao
   const iframe = document.createElement("iframe")
   iframe.id = "print-frame"
   iframe.style.position = "fixed"
@@ -139,102 +139,298 @@ export function imprimirPedido(pedido: Pedido) {
     return
   }
 
+  const dataFormatada = new Date(pedido.criadoEm).toLocaleDateString("pt-BR")
+  const horaFormatada = new Date(pedido.criadoEm).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+  const tipoText = pedido.tipo === "entrega" ? "DELIVERY" : pedido.tipo === "retirada" ? "RETIRADA" : `MESA ${pedido.mesa || ""}`
+
   const html = `
     <!DOCTYPE html>
     <html>
     <head>
       <title>Pedido #${pedido.numero}</title>
       <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+        
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body { 
-          font-family: 'Courier New', monospace; 
-          font-size: 12px; 
+          font-family: 'JetBrains Mono', 'Courier New', monospace; 
+          font-size: 11px; 
           width: 80mm; 
-          padding: 5mm;
+          padding: 4mm;
           background: white;
-          color: black;
+          color: #111;
+          line-height: 1.4;
         }
-        .center { text-align: center; }
-        .bold { font-weight: bold; }
-        .border-dash { border-bottom: 1px dashed #000; padding-bottom: 5px; margin-bottom: 5px; }
-        .border-dot { border-bottom: 1px dotted #999; padding-bottom: 3px; margin-bottom: 3px; }
-        .flex { display: flex; justify-content: space-between; }
-        .pl { padding-left: 10px; }
-        .small { font-size: 10px; }
-        .big { font-size: 18px; }
-        .mt { margin-top: 10px; }
+        
+        .header {
+          text-align: center;
+          padding-bottom: 8px;
+          margin-bottom: 8px;
+          border-bottom: 2px solid #111;
+        }
+        
+        .logo {
+          font-size: 16px;
+          font-weight: 700;
+          letter-spacing: 1px;
+          margin-bottom: 2px;
+        }
+        
+        .subtitle {
+          font-size: 9px;
+          color: #666;
+          text-transform: uppercase;
+          letter-spacing: 2px;
+        }
+        
+        .order-box {
+          background: #111;
+          color: white;
+          text-align: center;
+          padding: 10px 8px;
+          margin: 8px 0;
+          border-radius: 4px;
+        }
+        
+        .order-number {
+          font-size: 22px;
+          font-weight: 700;
+          letter-spacing: 1px;
+        }
+        
+        .order-status {
+          font-size: 10px;
+          text-transform: uppercase;
+          letter-spacing: 2px;
+          margin-top: 4px;
+          opacity: 0.9;
+        }
+        
+        .info-row {
+          display: flex;
+          justify-content: space-between;
+          padding: 3px 0;
+          font-size: 10px;
+        }
+        
+        .info-label {
+          color: #666;
+        }
+        
+        .section {
+          margin: 10px 0;
+          padding: 8px 0;
+          border-top: 1px dashed #ccc;
+        }
+        
+        .section-title {
+          font-size: 10px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          color: #666;
+          margin-bottom: 8px;
+        }
+        
+        .customer-name {
+          font-size: 13px;
+          font-weight: 700;
+          margin-bottom: 4px;
+        }
+        
+        .delivery-type {
+          display: inline-block;
+          background: #f0f0f0;
+          padding: 3px 8px;
+          border-radius: 3px;
+          font-size: 10px;
+          font-weight: 700;
+          margin-top: 4px;
+        }
+        
+        .items-section {
+          margin: 10px 0;
+          padding-top: 8px;
+          border-top: 2px solid #111;
+        }
+        
+        .item {
+          padding: 8px 0;
+          border-bottom: 1px dotted #ddd;
+        }
+        
+        .item:last-child {
+          border-bottom: none;
+        }
+        
+        .item-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+        }
+        
+        .item-name {
+          font-weight: 700;
+          font-size: 11px;
+          flex: 1;
+        }
+        
+        .item-qty {
+          background: #111;
+          color: white;
+          padding: 1px 6px;
+          border-radius: 3px;
+          font-size: 10px;
+          font-weight: 700;
+          margin-right: 6px;
+        }
+        
+        .item-price {
+          font-weight: 700;
+          font-size: 11px;
+        }
+        
+        .item-detail {
+          font-size: 9px;
+          color: #555;
+          padding-left: 8px;
+          margin-top: 3px;
+        }
+        
+        .item-special {
+          font-size: 10px;
+          font-weight: 700;
+          color: #b45309;
+          padding-left: 8px;
+          margin-top: 4px;
+          background: #fef3c7;
+          padding: 4px 8px;
+          border-radius: 3px;
+          display: inline-block;
+        }
+        
+        .item-obs {
+          font-size: 9px;
+          font-style: italic;
+          color: #666;
+          padding-left: 8px;
+          margin-top: 3px;
+        }
+        
+        .total-section {
+          background: #111;
+          color: white;
+          text-align: center;
+          padding: 12px 8px;
+          margin: 10px 0;
+          border-radius: 4px;
+        }
+        
+        .total-label {
+          font-size: 10px;
+          text-transform: uppercase;
+          letter-spacing: 2px;
+          opacity: 0.8;
+        }
+        
+        .total-value {
+          font-size: 24px;
+          font-weight: 700;
+          margin-top: 4px;
+        }
+        
+        .footer {
+          text-align: center;
+          padding-top: 10px;
+          border-top: 1px dashed #ccc;
+          font-size: 9px;
+          color: #666;
+        }
+        
+        .footer-thanks {
+          font-size: 10px;
+          margin-bottom: 4px;
+        }
+        
         @media print {
-          body { width: 80mm; margin: 0; }
+          body { width: 80mm; margin: 0; padding: 3mm; }
+          .order-box, .total-section { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
       </style>
     </head>
     <body>
-      <div class="center border-dash">
-        <h1>CAPITAO BURGUER</h1>
-        <p class="small">Hamburguer e Porcoes</p>
+      <div class="header">
+        <div class="logo">CAPITAO BURGUER</div>
+        <div class="subtitle">Hamburguer Artesanal</div>
       </div>
 
-      <div class="center border-dash">
-        <p class="big bold">#${pedido.numero}</p>
-        <p class="bold">${pedido.status.toUpperCase()}</p>
+      <div class="order-box">
+        <div class="order-number">${pedido.numero}</div>
+        <div class="order-status">${pedido.status.toUpperCase()}</div>
       </div>
 
-      <div class="border-dash small">
-        <p>Data: ${new Date(pedido.criadoEm).toLocaleDateString("pt-BR")}</p>
-        <p>Hora: ${new Date(pedido.criadoEm).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</p>
+      <div class="info-row">
+        <span class="info-label">Data</span>
+        <span>${dataFormatada}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Hora</span>
+        <span>${horaFormatada}</span>
       </div>
 
-      <div class="border-dash">
-        <p class="bold">CLIENTE: ${pedido.cliente}</p>
-        ${pedido.telefone ? `<p>Tel: ${pedido.telefone}</p>` : ""}
-        <p class="bold">${pedido.tipo === "entrega" ? "ENTREGA" : pedido.tipo === "retirada" ? "RETIRADA" : `MESA ${pedido.mesa || ""}`}</p>
-        ${pedido.endereco ? `<p class="small">${pedido.endereco}</p>` : ""}
+      <div class="section">
+        <div class="section-title">Cliente</div>
+        <div class="customer-name">${pedido.cliente}</div>
+        ${pedido.telefone ? `<div style="font-size:10px;color:#666;">${pedido.telefone}</div>` : ""}
+        <div class="delivery-type">${tipoText}</div>
+        ${pedido.endereco ? `<div style="font-size:9px;color:#666;margin-top:6px;">${pedido.endereco}</div>` : ""}
       </div>
 
-      <div class="border-dash">
-        <p class="center bold">--- ITENS ---</p>
+      <div class="items-section">
+        <div class="section-title">Itens do Pedido</div>
         ${pedido.itens.map((item) => `
-          <div class="border-dot">
-            <div class="flex bold">
-              <span>${item.quantidade}x ${item.nome}</span>
-              <span>R$ ${(item.preco * item.quantidade).toFixed(2)}</span>
+          <div class="item">
+            <div class="item-header">
+              <div style="display:flex;align-items:center;">
+                <span class="item-qty">${item.quantidade}x</span>
+                <span class="item-name">${item.nome}</span>
+              </div>
+              <span class="item-price">R$ ${(item.preco * item.quantidade).toFixed(2)}</span>
             </div>
-            ${item.variacao ? `<p class="small pl">Tam: ${item.variacao}</p>` : ""}
-            ${item.maionese ? `<p class="small pl">Maionese: ${item.maionese}</p>` : ""}
+            ${item.acompanhamentos ? `<div class="item-special">${item.acompanhamentos}</div>` : ""}
+            ${item.variacao ? `<div class="item-detail">Tamanho: ${item.variacao}</div>` : ""}
+            ${item.maionese ? `<div class="item-detail">Maionese: ${item.maionese}</div>` : ""}
             ${item.extraMaioneses && item.extraMaioneses.length > 0 ? 
-              item.extraMaioneses.map((m: string) => `<p class="small pl">+ ${m} (+R$ 2,00)</p>`).join("") : ""}
+              item.extraMaioneses.map((m: string) => `<div class="item-detail">+ ${m} (+R$ 2,00)</div>`).join("") : ""}
             ${item.adicionais && item.adicionais.length > 0 ? 
               item.adicionais.map((add: any) => {
                 const nome = typeof add === "string" ? add : add.nome || "Adicional"
                 const qtd = typeof add === "object" ? (add.quantidade || 1) : 1
                 const preco = typeof add === "object" ? (add.preco || 0) : 0
-                return `<p class="small pl">+ ${nome} ${qtd > 1 ? "("+qtd+"x)" : ""} ${preco > 0 ? "R$ "+(preco * qtd).toFixed(2) : ""}</p>`
+                return `<div class="item-detail">+ ${nome}${qtd > 1 ? " ("+qtd+"x)" : ""}${preco > 0 ? " - R$ "+(preco * qtd).toFixed(2) : ""}</div>`
               }).join("") : ""}
-            ${item.observacao ? `<p class="small pl">OBS: ${item.observacao}</p>` : ""}
-            ${item.acompanhamentos ? `<p class="small pl" style="font-weight:bold;color:#92400e;">${item.acompanhamentos}</p>` : ""}
+            ${item.observacao ? `<div class="item-obs">OBS: ${item.observacao}</div>` : ""}
           </div>
         `).join("")}
       </div>
 
       ${pedido.observacao ? `
-        <div class="border-dash">
-          <p class="bold">OBSERVACAO:</p>
-          <p class="small">${pedido.observacao}</p>
+        <div class="section">
+          <div class="section-title">Observacao</div>
+          <div style="font-size:10px;">${pedido.observacao}</div>
         </div>
       ` : ""}
 
-      <div class="center border-dash">
-        <p class="big bold">TOTAL: R$ ${pedido.total.toFixed(2)}</p>
+      <div class="total-section">
+        <div class="total-label">Total do Pedido</div>
+        <div class="total-value">R$ ${pedido.total.toFixed(2)}</div>
       </div>
 
-      <div class="center mt small">
-        <p>Obrigado pela preferencia!</p>
-        <p>Capitao Burguer</p>
+      <div class="footer">
+        <div class="footer-thanks">Obrigado pela preferencia!</div>
+        <div>capitaoburguer.com.br</div>
       </div>
-
-      <script>
-        // Impressao sera chamada pelo iframe.onload
-      </script>
     </body>
     </html>
   `

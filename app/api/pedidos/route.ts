@@ -127,7 +127,6 @@ export async function DELETE() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    console.log("[v0] Pedido recebido - body completo:", JSON.stringify(body, null, 2))
 
     const cliente = String(body.cliente ?? body.customer_name ?? body.nome ?? "").trim()
     const telefone = String(body.telefone ?? body.customer_phone ?? body.phone ?? "").trim()
@@ -144,9 +143,6 @@ export async function POST(request: Request) {
     if (itens.length === 0 && Array.isArray(body.products)) {
       itens = body.products
     }
-    
-    console.log("[v0] Itens recebidos:", JSON.stringify(itens, null, 2))
-    console.log("[v0] Total de itens:", itens.length)
 
     if (!cliente) {
       return NextResponse.json(
@@ -181,10 +177,7 @@ export async function POST(request: Request) {
       [max_number, cliente, telefone || null, endereco || null, tipo, pagamento, total, observacao || null]
     )
 
-    console.log("[v0] Pedido criado:", pedido.id, "Numero:", pedido.order_number)
-
     // Inserir itens com todos os detalhes
-    console.log("[v0] Inserindo itens no banco para pedido:", pedido.id)
     for (const item of itens) {
       // Normalizar campos do item (aceitar diferentes formatos)
       const itemNome = item.nome || item.name || item.product_name || "Item sem nome"
@@ -198,23 +191,10 @@ export async function POST(request: Request) {
       const adicionais = item.adicionais || item.addons ? JSON.stringify(item.adicionais || item.addons) : null
       const acompanhamentos = item.acompanhamentos || item.accompaniments || item.opcoes || null
       
-      console.log("[v0] Inserindo item:", {
-        nome: itemNome,
-        quantidade: itemQuantidade,
-        preco: itemPreco,
-        variacao,
-        maionese,
-        extraMaioneses,
-        adicionais,
-        acompanhamentos,
-        total: itemPreco * itemQuantidade
-      })
-      
-      const result = await query(
+      await query(
         `INSERT INTO ${SCHEMA}.order_items 
           (order_id, product_name, quantity, variation_name, maionese, extra_maioneses, addons, acompanhamentos, item_total)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-         RETURNING *`,
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
         [
           pedido.id, 
           itemNome, 
@@ -227,7 +207,6 @@ export async function POST(request: Request) {
           itemPreco * itemQuantidade
         ]
       )
-      console.log("[v0] Item inserido com sucesso:", result)
     }
 
     return NextResponse.json({
