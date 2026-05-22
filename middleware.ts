@@ -4,8 +4,16 @@ import type { NextRequest } from "next/server"
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Deixa passar: dashboard e sub-rotas, API routes
-  if (pathname.startsWith("/dashboard") || pathname.startsWith("/api")) {
+  // Deixa passar: dashboard, API, arquivos estaticos PWA
+  if (
+    pathname.startsWith("/dashboard") || 
+    pathname.startsWith("/api") ||
+    pathname === "/manifest.json" ||
+    pathname === "/sw.js" ||
+    pathname.startsWith("/icons/") ||
+    pathname.endsWith(".png") ||
+    pathname.endsWith(".ico")
+  ) {
     return NextResponse.next()
   }
 
