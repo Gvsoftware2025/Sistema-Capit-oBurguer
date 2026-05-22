@@ -219,10 +219,10 @@ export async function POST(request: Request) {
         criadoEm: pedido.created_at,
       },
     }, { status: 201 })
-  } catch (error) {
-    console.error("[API] Erro ao criar pedido:", error)
+  } catch (error: any) {
+    console.error("[API] Erro ao criar pedido:", error?.message || error)
     return NextResponse.json(
-      { error: "Erro ao criar pedido" },
+      { error: "Erro ao criar pedido", details: error?.message },
       { status: 500 }
     )
   }
