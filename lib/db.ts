@@ -7,20 +7,30 @@ const pool = new Pool({
   user: process.env.DB_USER || "gvuser",
   password: process.env.DB_PASSWORD || "153045",
   ssl: false,
-  max: 10,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
+  max: 5,
+  idleTimeoutMillis: 10000,
+  connectionTimeoutMillis: 10000,
+  allowExitOnIdle: true,
+})
+
+// Tratar erros de conexão
+pool.on('error', (err) => {
+  console.error('[DB] Erro no pool:', err.message)
 })
 
 export const SCHEMA = "capitao_burguer"
 
 export async function query<T>(text: string, params?: unknown[]): Promise<T[]> {
-  const client = await pool.connect()
+  let client
   try {
+    client = await pool.connect()
     const result = await client.query(text, params)
     return result.rows as T[]
+  } catch (error) {
+    console.error('[DB] Erro na query:', error)
+    throw error
   } finally {
-    client.release()
+    if (client) client.release(true)
   }
 }
 
