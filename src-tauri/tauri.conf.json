@@ -5,7 +5,7 @@
   "identifier": "com.capitaoburguer.sistema",
   "build": {
     "devUrl": "http://localhost:3000",
-    "frontendDist": "../out"
+    "frontendDist": "https://sistema-capit-o-burguer.vercel.app"
   },
   "app": {
     "windows": [
@@ -26,7 +26,9 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis"],
+    "targets": [
+      "nsis"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -36,7 +38,9 @@
     ],
     "windows": {
       "nsis": {
-        "languages": ["PortugueseBR"],
+        "languages": [
+          "PortugueseBR"
+        ],
         "displayLanguageSelector": false,
         "installMode": "currentUser",
         "installerIcon": "icons/icon.ico"
