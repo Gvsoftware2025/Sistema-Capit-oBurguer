@@ -27,6 +27,7 @@ export async function GET(request: Request) {
             'maionese', oi.maionese,
             'extraMaioneses', oi.extra_maioneses,
             'addons', oi.addons,
+            'acompanhamentos', oi.acompanhamentos,
             'itemTotal', oi.item_total
           )
         ) FILTER (WHERE oi.id IS NOT NULL), '[]') as items
@@ -93,6 +94,7 @@ export async function GET(request: Request) {
           maionese: it.maionese,
           extraMaioneses: extraMaioParsed,
           adicionais: adicionaisParsed,
+          acompanhamentos: it.acompanhamentos,
           preco: Number(it.itemTotal) / it.quantity,
         }
       }),
@@ -125,15 +127,22 @@ export async function DELETE() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    console.log("[v0] Pedido recebido:", JSON.stringify(body, null, 2))
 
-    const cliente = String(body.cliente ?? "").trim()
-    const telefone = String(body.telefone ?? "").trim()
-    const endereco = String(body.endereco ?? "").trim()
-    const tipo = body.tipo === "entrega" ? "entregar" : "retirar"
-    const pagamento = body.pagamento || "dinheiro"
-    const observacao = String(body.observacao ?? "").trim()
-    const itens = Array.isArray(body.itens) ? body.itens : []
+    const cliente = String(body.cliente ?? body.customer_name ?? body.nome ?? "").trim()
+    const telefone = String(body.telefone ?? body.customer_phone ?? body.phone ?? "").trim()
+    const endereco = String(body.endereco ?? body.customer_address ?? body.address ?? "").trim()
+    const tipo = (body.tipo === "entrega" || body.delivery_type === "entregar") ? "entregar" : "retirar"
+    const pagamento = body.pagamento || body.payment_method || "dinheiro"
+    const observacao = String(body.observacao ?? body.notes ?? "").trim()
+    
+    // Aceitar itens de diferentes formatos
+    let itens = Array.isArray(body.itens) ? body.itens : []
+    if (itens.length === 0 && Array.isArray(body.items)) {
+      itens = body.items
+    }
+    if (itens.length === 0 && Array.isArray(body.products)) {
+      itens = body.products
+    }
 
     if (!cliente) {
       return NextResponse.json(
@@ -148,8 +157,9 @@ export async function POST(request: Request) {
       )
     }
 
+    // Calcular total baseado nos itens normalizados
     const total = itens.reduce(
-      (acc: number, it: any) => acc + Number(it.preco) * Number(it.quantidade),
+      (acc: number, it: any) => acc + Number(it.preco || it.price || it.unit_price || 0) * Number(it.quantidade || it.quantity || 1),
       0
     )
 
@@ -167,29 +177,34 @@ export async function POST(request: Request) {
       [max_number, cliente, telefone || null, endereco || null, tipo, pagamento, total, observacao || null]
     )
 
-    console.log("[v0] Pedido criado:", pedido.id, "Numero:", pedido.order_number)
-
     // Inserir itens com todos os detalhes
     for (const item of itens) {
+      // Normalizar campos do item (aceitar diferentes formatos)
+      const itemNome = item.nome || item.name || item.product_name || "Item sem nome"
+      const itemQuantidade = Number(item.quantidade || item.quantity || 1)
+      const itemPreco = Number(item.preco || item.price || item.unit_price || 0)
+      
       // Extrair detalhes do item
-      const variacao = item.variacao || item.observacao || null
-      const maionese = item.maionese || null
-      const extraMaioneses = item.extraMaioneses ? JSON.stringify(item.extraMaioneses) : null
-      const adicionais = item.adicionais ? JSON.stringify(item.adicionais) : null
+      const variacao = item.variacao || item.variation || item.variation_name || item.observacao || null
+      const maionese = item.maionese || item.mayo || null
+      const extraMaioneses = item.extraMaioneses || item.extra_maioneses ? JSON.stringify(item.extraMaioneses || item.extra_maioneses) : null
+      const adicionais = item.adicionais || item.addons ? JSON.stringify(item.adicionais || item.addons) : null
+      const acompanhamentos = item.acompanhamentos || item.accompaniments || item.opcoes || null
       
       await query(
         `INSERT INTO ${SCHEMA}.order_items 
-          (order_id, product_name, quantity, variation_name, maionese, extra_maioneses, addons, item_total)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+          (order_id, product_name, quantity, variation_name, maionese, extra_maioneses, addons, acompanhamentos, item_total)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
         [
           pedido.id, 
-          item.nome, 
-          item.quantidade, 
+          itemNome, 
+          itemQuantidade, 
           variacao,
           maionese,
           extraMaioneses,
           adicionais,
-          Number(item.preco) * Number(item.quantidade)
+          acompanhamentos,
+          itemPreco * itemQuantidade
         ]
       )
     }

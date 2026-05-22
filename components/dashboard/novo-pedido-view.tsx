@@ -55,7 +55,16 @@ type ItemCarrinho = {
   maionese?: string
   extraMaioneses?: string[]
   adicionais?: { nome: string; preco: number; quantidade: number }[]
+  acompanhamentos?: string  // Opcoes especiais como "Batata com: Catupiry, Kibe: Tradicional"
   observacao?: string
+}
+
+type ProductOption = {
+  id: number
+  product_id: number
+  option_group: string
+  option_name: string
+  is_available: boolean
 }
 
 type Etapa = "cliente" | "cardapio" | "resumo"
@@ -85,6 +94,11 @@ export function NovoPedidoView() {
   const [adicionaisSelecionados, setAdicionaisSelecionados] = useState<{ [key: string]: number }>({})
   const [observacaoItem, setObservacaoItem] = useState("")
   const [quantidadeItem, setQuantidadeItem] = useState(1)
+  
+  // Opcoes especiais de produtos (Batata com, Kibe, etc)
+  const [productOptions, setProductOptions] = useState<ProductOption[]>([])
+  const [selectedOptions, setSelectedOptions] = useState<{ [group: string]: string }>({})
+  const [loadingOptions, setLoadingOptions] = useState(false)
 
   // Carregar dados do banco
   useEffect(() => {
@@ -128,14 +142,30 @@ export function NovoPedidoView() {
     return matchCategoria && matchBusca
   })
 
-  const abrirModalPersonalizacao = (produto: Produto) => {
+  const abrirModalPersonalizacao = async (produto: Produto) => {
     setProdutoSelecionado(produto)
     setMaioneseSelecionada("")
     setExtraMaioneses([])
     setAdicionaisSelecionados({})
     setObservacaoItem("")
     setQuantidadeItem(1)
+    setSelectedOptions({})
+    setProductOptions([])
     setModalAberto(true)
+    
+    // Carregar opcoes especiais do produto
+    setLoadingOptions(true)
+    try {
+      const res = await fetch(`/api/cardapio/product-options?product_id=${produto.id}`)
+      const data = await res.json()
+      if (data.options && data.options.length > 0) {
+        setProductOptions(data.options)
+      }
+    } catch (error) {
+      console.error("Erro ao carregar opcoes:", error)
+    } finally {
+      setLoadingOptions(false)
+    }
   }
 
   const adicionarAoCarrinho = () => {
@@ -148,6 +178,14 @@ export function NovoPedidoView() {
         return { nome, quantidade, preco: add ? Number(add.price) : 0 }
       })
 
+    // Montar string de acompanhamentos especiais
+    let acompanhamentosStr = ""
+    if (Object.keys(selectedOptions).length > 0) {
+      acompanhamentosStr = Object.entries(selectedOptions)
+        .map(([group, option]) => `${group}: ${option}`)
+        .join(", ")
+    }
+
     const novoItem: ItemCarrinho = {
       id: `${produtoSelecionado.id}-${Date.now()}`,
       produtoId: produtoSelecionado.id,
@@ -157,6 +195,7 @@ export function NovoPedidoView() {
       maionese: maioneseSelecionada || undefined,
       extraMaioneses: extraMaioneses.length > 0 ? extraMaioneses : undefined,
       adicionais: adicionaisArr.length > 0 ? adicionaisArr : undefined,
+      acompanhamentos: acompanhamentosStr || undefined,
       observacao: observacaoItem || undefined,
     }
 
@@ -218,6 +257,7 @@ export function NovoPedidoView() {
             maionese: item.maionese,
             extraMaioneses: item.extraMaioneses,
             adicionais: item.adicionais,
+            acompanhamentos: item.acompanhamentos,
             observacao: item.observacao,
           })),
         }),
@@ -325,6 +365,11 @@ export function NovoPedidoView() {
                     {item.adicionais && item.adicionais.length > 0 && (
                       <p className="text-xs text-amber-500 mt-1">
                         Adicionais: {item.adicionais.map((a) => `${a.quantidade}x ${a.nome}`).join(", ")}
+                      </p>
+                    )}
+                    {item.acompanhamentos && (
+                      <p className="text-xs text-purple-400 mt-1 font-semibold">
+                        {item.acompanhamentos}
                       </p>
                     )}
                     {item.observacao && (
@@ -483,6 +528,56 @@ export function NovoPedidoView() {
           </DialogHeader>
 
           <div className="space-y-4 mt-4">
+            {/* Opcoes Especiais do Produto (Batata com, Kibe, etc) */}
+            {loadingOptions ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <span className="ml-2 text-sm text-muted-foreground">Carregando opcoes...</span>
+              </div>
+            ) : productOptions.length > 0 && (
+              <>
+                {/* Agrupar opcoes por grupo */}
+                {Array.from(new Set(productOptions.map(o => o.option_group))).map(group => {
+                  const groupOptions = productOptions.filter(o => o.option_group === group)
+                  return (
+                    <div key={group}>
+                      <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                        {group}: <span className="text-red-500">* Obrigatorio</span>
+                      </label>
+                      <div className="space-y-2">
+                        {groupOptions.map((opt) => (
+                          <button
+                            key={opt.id}
+                            onClick={() => setSelectedOptions({ ...selectedOptions, [group]: opt.option_name })}
+                            className={cn(
+                              "w-full flex items-center justify-between px-4 py-3 rounded-xl border-2 transition-all",
+                              selectedOptions[group] === opt.option_name
+                                ? "border-primary bg-primary/10 shadow-md"
+                                : "border-border hover:border-primary/50"
+                            )}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={cn(
+                                "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                                selectedOptions[group] === opt.option_name
+                                  ? "border-primary bg-primary"
+                                  : "border-muted-foreground"
+                              )}>
+                                {selectedOptions[group] === opt.option_name && (
+                                  <Check className="h-3 w-3 text-primary-foreground" />
+                                )}
+                              </div>
+                              <span className="font-medium">{opt.option_name}</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
+              </>
+            )}
+
             {/* Quantidade */}
             <div>
               <label className="text-sm font-medium text-muted-foreground mb-2 block">Quantidade</label>

@@ -26,6 +26,7 @@ export interface DbOrderItem {
   maionese: string | null
   extra_maioneses: string[] | null
   addons: string[] | null
+  acompanhamentos: string | null  // Para guardar opcoes especiais como "Batata com: Catupiry, Kibe: Tradicional"
   item_total: number
 }
 
@@ -73,6 +74,16 @@ export interface DbAddon {
   name: string
   price: number
   max_quantity: number
+  display_order: number
+  is_available: boolean
+}
+
+// Opcoes especiais de produtos (como Batata com Catupiry/Cheddar, Kibe Tradicional/Catupiry)
+export interface DbProductOption {
+  id: number
+  product_id: number
+  option_group: string  // Ex: "BATATA COM", "KIBE"
+  option_name: string   // Ex: "Catupiry", "Cheddar", "Tradicional", "Coalhada"
   display_order: number
   is_available: boolean
 }

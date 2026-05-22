@@ -5,7 +5,7 @@
   "identifier": "com.capitaoburguer.sistema",
   "build": {
     "devUrl": "http://localhost:3000",
-    "frontendDist": "https://sistema-capit-o-burguer.vercel.app?app=desktop"
+    "frontendDist": "../out"
   },
   "app": {
     "windows": [
