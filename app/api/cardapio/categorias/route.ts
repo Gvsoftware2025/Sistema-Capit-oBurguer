@@ -6,9 +6,11 @@ export const dynamic = "force-dynamic"
 
 export async function GET() {
   try {
+    console.log("[v0] Buscando categorias do schema:", SCHEMA)
     const categorias = await query<DbCategory>(
       `SELECT * FROM ${SCHEMA}.categories ORDER BY display_order`
     )
+    console.log("[v0] Categorias encontradas:", categorias.length)
     return NextResponse.json({ categorias })
   } catch (error) {
     console.error("[API] Erro ao buscar categorias:", error)

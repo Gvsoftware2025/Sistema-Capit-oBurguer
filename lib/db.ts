@@ -7,9 +7,11 @@ const pool = new Pool({
   user: "gvuser",
   password: "153045",
   ssl: false,
-  max: 10,
-  idleTimeoutMillis: 30000,
+  max: 3,
+  idleTimeoutMillis: 10000,
   connectionTimeoutMillis: 10000,
+  keepAlive: true,
+  keepAliveInitialDelayMillis: 10000,
 })
 
 export const SCHEMA = "capitao_burguer"
