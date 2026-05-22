@@ -165,7 +165,7 @@ export async function POST(request: Request) {
 
     // Buscar próximo número do pedido
     const [{ max_number }] = await query<{ max_number: number }>(
-      `SELECT COALESCE(MAX(order_number), 0) + 1 as max_number FROM ${SCHEMA}.orders`
+      `SELECT COALESCE(MAX(order_number)::integer, 0) + 1 as max_number FROM ${SCHEMA}.orders`
     )
 
     // Inserir pedido
