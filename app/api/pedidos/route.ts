@@ -163,10 +163,17 @@ export async function POST(request: Request) {
       0
     )
 
-    // Buscar próximo número do pedido
-    const [{ max_number }] = await query<{ max_number: number }>(
-      `SELECT COALESCE(MAX(order_number)::integer, 0) + 1 as max_number FROM ${SCHEMA}.orders`
+    // Gerar número do pedido no formato CB-YYYYMMDD-XXXX
+    const hoje = new Date()
+    const dataStr = hoje.toISOString().slice(0, 10).replace(/-/g, '')
+    
+    // Buscar último número do dia
+    const [{ count }] = await query<{ count: string }>(
+      `SELECT COUNT(*)::text as count FROM ${SCHEMA}.orders WHERE order_number LIKE $1`,
+      [`CB-${dataStr}-%`]
     )
+    const proximoNum = (parseInt(count) + 1).toString().padStart(4, '0')
+    const orderNumber = `CB-${dataStr}-${proximoNum}`
 
     // Inserir pedido
     const [pedido] = await query<DbOrder>(
@@ -174,7 +181,7 @@ export async function POST(request: Request) {
         (order_number, customer_name, customer_phone, customer_address, delivery_type, payment_method, subtotal, delivery_fee, total, status, notes)
        VALUES ($1, $2, $3, $4, $5, $6, $7, 0, $7, 'pendente', $8)
        RETURNING *`,
-      [max_number, cliente, telefone || null, endereco || null, tipo, pagamento, total, observacao || null]
+      [orderNumber, cliente, telefone || null, endereco || null, tipo, pagamento, total, observacao || null]
     )
 
     // Inserir itens com todos os detalhes
