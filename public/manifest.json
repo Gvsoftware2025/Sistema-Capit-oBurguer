@@ -1,0 +1,21 @@
+{
+  "name": "Capitao Burguer - Sistema de Gestao",
+  "short_name": "Capitao Burguer",
+  "description": "Sistema de gestao de pedidos do Capitao Burguer",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a1a",
+  "theme_color": "#f59e0b",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
