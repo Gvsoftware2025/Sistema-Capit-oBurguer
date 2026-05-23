@@ -1,6 +1,6 @@
 "use client"
 
-import { Volume2, VolumeX, Clock, Printer, PrinterOff } from "lucide-react"
+import { Volume2, VolumeX, Clock, Printer } from "lucide-react"
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 
@@ -54,7 +54,7 @@ export function Header({ somAtivado, onToggleSom, impressaoAutomatica, onToggleI
               : "border-gray-500/40 bg-gray-500/10 text-gray-400"
           )}
         >
-          {impressaoAutomatica ? <Printer className="h-4 w-4" /> : <PrinterOff className="h-4 w-4" />}
+          {impressaoAutomatica ? <Printer className="h-4 w-4" /> : <Printer className="h-4 w-4 opacity-50" />}
         </button>
 
         {/* Botão som */}
