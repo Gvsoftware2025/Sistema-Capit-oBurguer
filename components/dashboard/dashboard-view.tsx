@@ -142,6 +142,8 @@ export function DashboardView() {
       <Header
         somAtivado={somAtivado}
         onToggleSom={() => (somAtivado ? setSomAtivado(false) : ativarSom())}
+        impressaoAutomatica={impressaoAutomatica}
+        onToggleImpressao={() => setImpressaoAutomatica(!impressaoAutomatica)}
       />
 
       <FiltrosPedidos

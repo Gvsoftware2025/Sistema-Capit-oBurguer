@@ -1,15 +1,17 @@
 "use client"
 
-import { Volume2, VolumeX, Clock } from "lucide-react"
+import { Volume2, VolumeX, Clock, Printer, PrinterOff } from "lucide-react"
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 
 interface HeaderProps {
   somAtivado: boolean
   onToggleSom: () => void
+  impressaoAutomatica: boolean
+  onToggleImpressao: () => void
 }
 
-export function Header({ somAtivado, onToggleSom }: HeaderProps) {
+export function Header({ somAtivado, onToggleSom, impressaoAutomatica, onToggleImpressao }: HeaderProps) {
   const [agora, setAgora] = useState<Date | null>(null)
   const [mounted, setMounted] = useState(false)
 
@@ -39,8 +41,22 @@ export function Header({ somAtivado, onToggleSom }: HeaderProps) {
         </h1>
       </div>
 
-      {/* Right - Som + Hora */}
+      {/* Right - Impressao + Som + Hora */}
       <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+        {/* Botão impressão automática */}
+        <button
+          onClick={onToggleImpressao}
+          title={impressaoAutomatica ? "Impressão automática LIGADA" : "Impressão automática DESLIGADA"}
+          className={cn(
+            "flex items-center justify-center p-2 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl border-2 transition-all duration-200",
+            impressaoAutomatica
+              ? "border-blue-500/40 bg-blue-500/10 text-blue-400"
+              : "border-gray-500/40 bg-gray-500/10 text-gray-400"
+          )}
+        >
+          {impressaoAutomatica ? <Printer className="h-4 w-4" /> : <PrinterOff className="h-4 w-4" />}
+        </button>
+
         {/* Botão som */}
         <button
           onClick={onToggleSom}
