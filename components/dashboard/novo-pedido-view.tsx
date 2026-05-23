@@ -241,6 +241,7 @@ export function NovoPedidoView() {
   }
 
   const enviarPedido = async () => {
+    if (enviando) return // Previne duplo clique
     setEnviando(true)
     try {
       const res = await fetch("/api/pedidos", {
@@ -264,13 +265,16 @@ export function NovoPedidoView() {
       })
       if (res.ok) {
         toast.success("Pedido enviado com sucesso!")
+        // Limpa o estado antes de redirecionar para evitar reenvio
+        setItens([])
+        setNomeCliente("")
         router.push("/dashboard")
       } else {
         toast.error("Erro ao enviar pedido")
+        setEnviando(false)
       }
     } catch {
       toast.error("Erro ao enviar pedido")
-    } finally {
       setEnviando(false)
     }
   }

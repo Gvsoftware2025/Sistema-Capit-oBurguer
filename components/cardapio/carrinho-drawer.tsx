@@ -36,6 +36,8 @@ export function CarrinhoDrawer() {
   const [observacao, setObservacao] = useState("")
 
   const enviarPedido = async () => {
+    if (enviando) return // Previne duplo clique
+    
     if (!cliente.trim()) {
       toast.error("Informe seu nome, marujo!")
       return
