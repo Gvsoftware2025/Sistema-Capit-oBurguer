@@ -50,7 +50,7 @@ export async function GET(request: Request) {
       endereco: p.customer_address,
       tipo: p.delivery_type === "entregar" ? "entrega" : "retirada",
       pagamento: p.payment_method,
-      troco: p.change_for ? Number(p.change_for) : undefined,
+      troco: p.cash_amount ? Number(p.cash_amount) : undefined,
       total: Number(p.total),
       status: p.status === "pendente" ? "novo" : p.status,
       criadoEm: p.created_at,
@@ -182,7 +182,7 @@ export async function POST(request: Request) {
     // Inserir pedido
     const [pedido] = await query<DbOrder>(
       `INSERT INTO ${SCHEMA}.orders 
-        (order_number, customer_name, customer_phone, customer_address, delivery_type, payment_method, change_for, subtotal, delivery_fee, total, status, notes)
+        (order_number, customer_name, customer_phone, customer_address, delivery_type, payment_method, cash_amount, subtotal, delivery_fee, total, status, notes)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, $8, 'pendente', $9)
        RETURNING *`,
       [orderNumber, cliente, telefone || null, endereco || null, tipo, pagamento, troco, total, observacao || null]
