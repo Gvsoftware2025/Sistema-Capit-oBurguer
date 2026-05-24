@@ -193,7 +193,7 @@ export async function POST(request: Request) {
       // Normalizar campos do item (aceitar diferentes formatos)
       const itemNome = item.nome || item.name || item.product_name || "Item sem nome"
       const itemQuantidade = Number(item.quantidade || item.quantity || 1)
-      const itemPreco = Number(item.preco || item.price || item.unit_price || 0)
+      const itemPreco = Number(item.preco || item.precoUnitario || item.price || item.unit_price || item.product_price || 0)
       
       // Extrair detalhes do item
       const variacao = item.variacao || item.variation || item.variation_name || item.observacao || null
