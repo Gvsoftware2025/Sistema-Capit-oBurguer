@@ -77,7 +77,14 @@ export function imprimirPedido(pedido: Pedido) {
           margin: 0;
         }
         
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { 
+          margin: 0; 
+          padding: 0; 
+          box-sizing: border-box; 
+          color: #000 !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
         
         body { 
           font-family: 'Courier New', Courier, monospace; 
@@ -170,16 +177,18 @@ export function imprimirPedido(pedido: Pedido) {
         }
         
         .item-detail {
-          font-size: 10px;
+          font-size: 11px;
           padding-left: 8px;
-          font-weight: normal;
+          font-weight: bold;
+          color: #000;
         }
         
         .item-special {
-          font-size: 11px;
+          font-size: 12px;
           font-weight: bold;
           padding-left: 4px;
           margin-top: 2px;
+          color: #000;
         }
         
         .total {
