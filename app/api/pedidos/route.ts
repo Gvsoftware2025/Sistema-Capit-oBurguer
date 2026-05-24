@@ -198,7 +198,11 @@ export async function POST(request: Request) {
       // Extrair detalhes do item
       const variacao = item.variacao || item.variation || item.variation_name || item.observacao || null
       const maionese = item.maionese || item.mayo || null
-      const extraMaioneses = item.extraMaioneses || item.extra_maioneses ? JSON.stringify(item.extraMaioneses || item.extra_maioneses) : null
+      // extra_maioneses é TEXT[] no banco, não JSON
+      const extraMaionesisArr = item.extraMaioneses || item.extra_maioneses || []
+      const extraMaioneses = Array.isArray(extraMaionesisArr) && extraMaionesisArr.length > 0 
+        ? `{${extraMaionesisArr.map((m: string) => `"${m}"`).join(',')}}` 
+        : null
       const adicionais = item.adicionais || item.addons ? JSON.stringify(item.adicionais || item.addons) : null
       const acompanhamentos = item.acompanhamentos || item.accompaniments || item.opcoes || null
       
