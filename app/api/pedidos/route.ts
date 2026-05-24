@@ -163,7 +163,7 @@ export async function POST(request: Request) {
 
     // Calcular total baseado nos itens normalizados
     const total = itens.reduce(
-      (acc: number, it: any) => acc + Number(it.preco || it.price || it.unit_price || 0) * Number(it.quantidade || it.quantity || 1),
+      (acc: number, it: any) => acc + Number(it.preco || it.precoUnitario || it.price || it.unit_price || it.product_price || 0) * Number(it.quantidade || it.quantity || 1),
       0
     )
 
