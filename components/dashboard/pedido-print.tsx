@@ -118,8 +118,7 @@ export function imprimirPedido(pedido: Pedido) {
           text-align: center;
           padding: 6px 0;
           margin: 4px 0;
-          background: #000;
-          color: #fff;
+          border: 2px solid #000;
           font-size: 18px;
           font-weight: bold;
         }
@@ -144,8 +143,7 @@ export function imprimirPedido(pedido: Pedido) {
         .delivery-type {
           font-size: 12px;
           font-weight: bold;
-          background: #000;
-          color: #fff;
+          border: 2px solid #000;
           display: inline-block;
           padding: 2px 6px;
           margin-top: 2px;
@@ -195,8 +193,7 @@ export function imprimirPedido(pedido: Pedido) {
           text-align: center;
           padding: 6px 0;
           margin-top: 4px;
-          background: #000;
-          color: #fff;
+          border: 2px solid #000;
         }
         
         .total-label {
