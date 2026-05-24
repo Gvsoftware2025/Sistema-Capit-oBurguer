@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/radio-group"
 import { useCarrinho } from "@/hooks/use-carrinho"
 import { toast } from "sonner"
-import type { TipoPedido } from "@/lib/types"
+import type { TipoPedido, FormaPagamento } from "@/lib/types"
 
 export function CarrinhoDrawer() {
   const { itens, total, totalItens, alterarQuantidade, remover, limpar } =
@@ -33,6 +33,8 @@ export function CarrinhoDrawer() {
   const [telefone, setTelefone] = useState("")
   const [endereco, setEndereco] = useState("")
   const [tipo, setTipo] = useState<TipoPedido>("retirada")
+  const [pagamento, setPagamento] = useState<FormaPagamento>("dinheiro")
+  const [troco, setTroco] = useState("")
   const [observacao, setObservacao] = useState("")
 
   const enviarPedido = async () => {
@@ -61,6 +63,8 @@ export function CarrinhoDrawer() {
           telefone: telefone.trim() || undefined,
           endereco: tipo === "entrega" ? endereco.trim() : undefined,
           tipo,
+          pagamento,
+          troco: pagamento === "dinheiro" && troco ? parseFloat(troco) : undefined,
           origem: "cliente",
           observacao: observacao.trim() || undefined,
           itens: itens.map((i) => ({
@@ -84,6 +88,8 @@ export function CarrinhoDrawer() {
       setCliente("")
       setTelefone("")
       setEndereco("")
+      setPagamento("dinheiro")
+      setTroco("")
       setObservacao("")
       setOpen(false)
     } catch (e: unknown) {
@@ -266,7 +272,7 @@ export function CarrinhoDrawer() {
               )}
               <div>
                 <Label htmlFor="obs" className="text-xs uppercase tracking-wider text-muted-foreground">
-                  Observação
+                  Observacao
                 </Label>
                 <Textarea
                   id="obs"
@@ -277,6 +283,50 @@ export function CarrinhoDrawer() {
                   className="mt-1 bg-input/40"
                 />
               </div>
+              <div>
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Pagamento
+                </Label>
+                <RadioGroup
+                  value={pagamento}
+                  onValueChange={(v) => setPagamento(v as FormaPagamento)}
+                  className="mt-1 grid grid-cols-2 gap-2"
+                >
+                  {([
+                    { value: "dinheiro", label: "Dinheiro" },
+                    { value: "pix", label: "PIX" },
+                    { value: "cartao_credito", label: "Credito" },
+                    { value: "cartao_debito", label: "Debito" },
+                  ] as const).map((p) => (
+                    <Label
+                      key={p.value}
+                      className={`flex cursor-pointer items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors ${
+                        pagamento === p.value
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border/60"
+                      }`}
+                    >
+                      <RadioGroupItem value={p.value} className="sr-only" />
+                      {p.label}
+                    </Label>
+                  ))}
+                </RadioGroup>
+              </div>
+              {pagamento === "dinheiro" && (
+                <div>
+                  <Label htmlFor="troco" className="text-xs uppercase tracking-wider text-muted-foreground">
+                    Troco para quanto?
+                  </Label>
+                  <Input
+                    id="troco"
+                    type="number"
+                    value={troco}
+                    onChange={(e) => setTroco(e.target.value)}
+                    placeholder="Ex: 100.00 (deixe vazio se nao precisar)"
+                    className="mt-1 bg-input/40"
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>

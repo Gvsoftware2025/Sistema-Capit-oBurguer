@@ -58,6 +58,13 @@ export function imprimirPedido(pedido: Pedido) {
   const dataFormatada = new Date(pedido.criadoEm).toLocaleDateString("pt-BR")
   const horaFormatada = new Date(pedido.criadoEm).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
   const tipoText = pedido.tipo === "entrega" ? "DELIVERY" : pedido.tipo === "retirada" ? "RETIRADA" : "BALCAO"
+  
+  const pagamentoText = {
+    dinheiro: "DINHEIRO",
+    pix: "PIX",
+    cartao_credito: "CARTAO CREDITO",
+    cartao_debito: "CARTAO DEBITO"
+  }[pedido.pagamento || ""] || ""
 
   const html = `
     <!DOCTYPE html>
@@ -192,6 +199,28 @@ export function imprimirPedido(pedido: Pedido) {
           font-weight: bold;
         }
         
+        .payment {
+          text-align: center;
+          padding: 6px 0;
+          margin-top: 4px;
+          border: 2px solid #000;
+        }
+        
+        .payment-label {
+          font-size: 10px;
+          font-weight: bold;
+        }
+        
+        .payment-value {
+          font-size: 14px;
+          font-weight: bold;
+        }
+        
+        .change {
+          font-size: 11px;
+          margin-top: 2px;
+        }
+        
         .footer {
           text-align: center;
           padding-top: 4px;
@@ -263,6 +292,17 @@ export function imprimirPedido(pedido: Pedido) {
         <div class="total-label">TOTAL</div>
         <div class="total-value">R$ ${pedido.total.toFixed(2)}</div>
       </div>
+
+      ${pagamentoText ? `
+      <div class="payment">
+        <div class="payment-label">PAGAMENTO</div>
+        <div class="payment-value">${pagamentoText}</div>
+        ${pedido.pagamento === "dinheiro" && pedido.troco ? `
+          <div class="change">Troco para: R$ ${pedido.troco.toFixed(2)}</div>
+          <div class="change">Troco: R$ ${(pedido.troco - pedido.total).toFixed(2)}</div>
+        ` : ""}
+      </div>
+      ` : ""}
 
       <div class="footer">
         Obrigado!<br>

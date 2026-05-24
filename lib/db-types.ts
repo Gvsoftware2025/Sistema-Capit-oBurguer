@@ -4,14 +4,16 @@ export interface DbOrder {
   id: number
   order_number: number
   customer_name: string
+  customer_phone: string | null
   customer_address: string | null
   delivery_type: "entregar" | "retirar"
-  payment_method: "dinheiro" | "cartao" | "pix"
-  cash_amount: number | null
+  payment_method: "dinheiro" | "cartao_credito" | "cartao_debito" | "pix"
+  change_for: number | null
   subtotal: number
   delivery_fee: number
   total: number
   status: "pendente" | "preparando" | "pronto" | "entregue" | "cancelado"
+  notes: string | null
   created_at: Date
   updated_at: Date
   items?: DbOrderItem[]

@@ -50,6 +50,7 @@ export async function GET(request: Request) {
       endereco: p.customer_address,
       tipo: p.delivery_type === "entregar" ? "entrega" : "retirada",
       pagamento: p.payment_method,
+      troco: p.change_for ? Number(p.change_for) : undefined,
       total: Number(p.total),
       status: p.status === "pendente" ? "novo" : p.status,
       criadoEm: p.created_at,
@@ -133,6 +134,7 @@ export async function POST(request: Request) {
     const endereco = String(body.endereco ?? body.customer_address ?? body.address ?? "").trim()
     const tipo = (body.tipo === "entrega" || body.delivery_type === "entregar") ? "entregar" : "retirar"
     const pagamento = body.pagamento || body.payment_method || "dinheiro"
+    const troco = body.troco || body.change_for || null
     const observacao = String(body.observacao ?? body.notes ?? "").trim()
     
     // Aceitar itens de diferentes formatos
@@ -178,10 +180,10 @@ export async function POST(request: Request) {
     // Inserir pedido
     const [pedido] = await query<DbOrder>(
       `INSERT INTO ${SCHEMA}.orders 
-        (order_number, customer_name, customer_phone, customer_address, delivery_type, payment_method, subtotal, delivery_fee, total, status, notes)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, 0, $7, 'pendente', $8)
+        (order_number, customer_name, customer_phone, customer_address, delivery_type, payment_method, change_for, subtotal, delivery_fee, total, status, notes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, $8, 'pendente', $9)
        RETURNING *`,
-      [orderNumber, cliente, telefone || null, endereco || null, tipo, pagamento, total, observacao || null]
+      [orderNumber, cliente, telefone || null, endereco || null, tipo, pagamento, troco, total, observacao || null]
     )
 
     // Inserir itens com todos os detalhes

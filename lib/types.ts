@@ -40,6 +40,7 @@ export type ItemPedido = {
 export type TipoPedido = "retirada" | "entrega" | "balcao"
 export type StatusPedido = "novo" | "preparando" | "finalizado"
 export type OrigemPedido = "cliente" | "funcionario"
+export type FormaPagamento = "dinheiro" | "pix" | "cartao_credito" | "cartao_debito"
 
 export type Pedido = {
   id: string
@@ -53,6 +54,8 @@ export type Pedido = {
   observacao?: string
   total: number
   status: StatusPedido
+  pagamento?: FormaPagamento
+  troco?: number
   criadoEm: string // ISO
   finalizadoEm?: string
 }
