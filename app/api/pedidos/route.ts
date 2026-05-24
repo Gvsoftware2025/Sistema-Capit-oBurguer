@@ -134,8 +134,10 @@ export async function POST(request: Request) {
     const endereco = String(body.endereco ?? body.customer_address ?? body.address ?? "").trim()
     const tipo = (body.tipo === "entrega" || body.delivery_type === "entregar") ? "entregar" : "retirar"
     const pagamento = body.pagamento || body.payment_method || "dinheiro"
-    const troco = body.troco || body.change_for || null
+    const troco = body.troco !== undefined ? Number(body.troco) : (body.change_for !== undefined ? Number(body.change_for) : null)
     const observacao = String(body.observacao ?? body.notes ?? "").trim()
+    
+    console.log("[v0] Pedido recebido - pagamento:", pagamento, "troco:", troco, "body.troco:", body.troco)
     
     // Aceitar itens de diferentes formatos
     let itens = Array.isArray(body.itens) ? body.itens : []
