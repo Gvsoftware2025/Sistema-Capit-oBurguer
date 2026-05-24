@@ -77,6 +77,21 @@ export function imprimirPedido(pedido: Pedido) {
           margin: 0;
         }
         
+        @media print {
+          html, body {
+            height: auto !important;
+            overflow: visible !important;
+          }
+          * {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          .receipt {
+            page-break-after: avoid !important;
+            page-break-before: avoid !important;
+          }
+        }
+        
         * { 
           margin: 0; 
           padding: 0; 
@@ -84,6 +99,11 @@ export function imprimirPedido(pedido: Pedido) {
           color: #000 !important;
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
+        }
+        
+        html, body {
+          height: auto;
+          overflow: visible;
         }
         
         body { 
@@ -95,6 +115,12 @@ export function imprimirPedido(pedido: Pedido) {
           color: #000;
           line-height: 1.3;
           font-weight: bold;
+        }
+        
+        .receipt {
+          width: 100%;
+          height: auto;
+          overflow: visible;
         }
         
         .center { text-align: center; }
@@ -251,6 +277,7 @@ export function imprimirPedido(pedido: Pedido) {
       </style>
     </head>
     <body>
+      <div class="receipt">
       <div class="header">
         <div class="logo">CAPITAO BURGUER</div>
       </div>
@@ -313,6 +340,7 @@ export function imprimirPedido(pedido: Pedido) {
       <div class="footer">
         Obrigado!<br>
         Capitao Burguer
+      </div>
       </div>
     </body>
     </html>
