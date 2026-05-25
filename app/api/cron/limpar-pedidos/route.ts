@@ -1,4 +1,4 @@
-import { sql } from "@/lib/db"
+import { query } from "@/lib/db"
 import { NextResponse } from "next/server"
 
 // Esta rota é chamada pelo Vercel Cron
@@ -49,16 +49,16 @@ export async function GET(request: Request) {
     }
 
     // Deletar todos os itens dos pedidos primeiro (foreign key)
-    await sql`DELETE FROM capitao_burguer.order_items`
+    await query("DELETE FROM capitao_burguer.order_items")
     
     // Deletar todos os pedidos
-    const result = await sql`DELETE FROM capitao_burguer.orders RETURNING id`
+    const result = await query<{ id: number }>("DELETE FROM capitao_burguer.orders RETURNING id")
     
     // Resetar o contador diário
-    await sql`
+    await query(`
       UPDATE capitao_burguer.order_counter 
       SET last_number = 0, last_date = CURRENT_DATE
-    `
+    `)
 
     return NextResponse.json({ 
       success: true, 
