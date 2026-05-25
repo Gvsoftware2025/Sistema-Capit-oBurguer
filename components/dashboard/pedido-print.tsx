@@ -73,22 +73,30 @@ export function imprimirPedido(pedido: Pedido) {
       <title>Pedido #${pedido.numero}</title>
       <style>
         @page {
-          size: 58mm auto;
-          margin: 0;
+          size: 58mm 297mm;
+          margin: 0 !important;
+          padding: 0 !important;
         }
         
         @media print {
           html, body {
+            width: 58mm !important;
             height: auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
             overflow: visible !important;
-          }
-          * {
-            page-break-inside: avoid !important;
-            break-inside: avoid !important;
+            background: white !important;
           }
           .receipt {
-            page-break-after: avoid !important;
-            page-break-before: avoid !important;
+            page-break-inside: avoid !important;
+            page-break-after: auto !important;
+            page-break-before: auto !important;
+            break-inside: avoid !important;
+            width: 58mm !important;
+          }
+          .total, .payment, .footer {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
           }
         }
         
