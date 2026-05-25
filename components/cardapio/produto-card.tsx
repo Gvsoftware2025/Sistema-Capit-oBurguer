@@ -22,28 +22,49 @@ type ProductOption = {
   is_available: boolean
 }
 
+type ProductVariation = {
+  id: number
+  product_id: number
+  name: string
+  price: number
+  is_available: boolean
+}
+
 export function ProdutoCard({ produto }: { produto: Produto }) {
   const { adicionar } = useCarrinho()
   const [modalAberto, setModalAberto] = useState(false)
   const [opcoes, setOpcoes] = useState<ProductOption[]>([])
+  const [variacoes, setVariacoes] = useState<ProductVariation[]>([])
   const [loadingOpcoes, setLoadingOpcoes] = useState(false)
   const [selectedOptions, setSelectedOptions] = useState<{ [group: string]: string }>({})
+  const [selectedVariation, setSelectedVariation] = useState<ProductVariation | null>(null)
   const [quantidade, setQuantidade] = useState(1)
 
   const handleAdd = async () => {
-    // Verificar se o produto tem opcoes especiais
+    // Verificar se o produto tem opcoes especiais ou variacoes
     setLoadingOpcoes(true)
     try {
-      const res = await fetch(`/api/cardapio/product-options?product_id=${produto.id}`)
-      const data = await res.json()
+      // Buscar opcoes e variacoes em paralelo
+      const [opcoesRes, variacoesRes] = await Promise.all([
+        fetch(`/api/cardapio/product-options?product_id=${produto.id}`),
+        fetch(`/api/cardapio/variacoes?product_id=${produto.id}`)
+      ])
       
-      if (data.options && data.options.length > 0) {
-        setOpcoes(data.options)
+      const opcoesData = await opcoesRes.json()
+      const variacoesData = await variacoesRes.json()
+      
+      const temOpcoes = opcoesData.options && opcoesData.options.length > 0
+      const temVariacoes = variacoesData.variacoes && variacoesData.variacoes.filter((v: ProductVariation) => v.product_id === produto.id).length > 0
+      
+      if (temOpcoes || temVariacoes) {
+        setOpcoes(opcoesData.options || [])
+        setVariacoes(variacoesData.variacoes?.filter((v: ProductVariation) => v.product_id === produto.id) || [])
         setSelectedOptions({})
+        setSelectedVariation(null)
         setQuantidade(1)
         setModalAberto(true)
       } else {
-        // Produto sem opcoes especiais, adiciona direto
+        // Produto sem opcoes especiais nem variacoes, adiciona direto
         adicionar(produto)
         toast.success(`${produto.nome} adicionado`, {
           description: `R$ ${produto.preco.toFixed(2)}`,
@@ -61,21 +82,39 @@ export function ProdutoCard({ produto }: { produto: Produto }) {
   }
 
   const grupos = Array.from(new Set(opcoes.map(o => o.option_group)))
-  const todosGruposSelecionados = grupos.every(g => selectedOptions[g])
+  const todosGruposSelecionados = grupos.length === 0 || grupos.every(g => selectedOptions[g])
+  const variacaoObrigatoria = variacoes.length > 0
+  const podeConfirmar = todosGruposSelecionados && (!variacaoObrigatoria || selectedVariation)
+
+  // Preco final considerando variacao
+  const precoFinal = selectedVariation ? selectedVariation.price : produto.preco
 
   const confirmarAdicao = () => {
-    if (!todosGruposSelecionados) {
+    if (!podeConfirmar) {
       toast.error("Selecione todas as opcoes obrigatorias")
       return
     }
 
-    const acompanhamentos = Object.entries(selectedOptions)
+    // Montar acompanhamentos incluindo variacao
+    let acompanhamentos = Object.entries(selectedOptions)
       .map(([group, option]) => `${group}: ${option}`)
       .join(", ")
 
-    adicionar(produto, quantidade, acompanhamentos)
-    toast.success(`${produto.nome} adicionado`, {
-      description: acompanhamentos,
+    // Se tem variacao, incluir no nome ou acompanhamentos
+    const nomeFinal = selectedVariation 
+      ? `${produto.nome} (${selectedVariation.name})` 
+      : produto.nome
+
+    // Criar produto modificado com preco da variacao
+    const produtoModificado = {
+      ...produto,
+      nome: nomeFinal,
+      preco: precoFinal
+    }
+
+    adicionar(produtoModificado, quantidade, acompanhamentos || undefined)
+    toast.success(`${nomeFinal} adicionado`, {
+      description: acompanhamentos || `R$ ${precoFinal.toFixed(2)}`,
     })
     setModalAberto(false)
   }
@@ -137,6 +176,44 @@ export function ProdutoCard({ produto }: { produto: Produto }) {
           </DialogHeader>
 
           <div className="space-y-4 mt-4">
+            {/* Variacoes (Individual, Meia, Inteira) */}
+            {variacoes.length > 0 && (
+              <div>
+                <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                  Tamanho: <span className="text-red-500">* Obrigatorio</span>
+                </label>
+                <div className="space-y-2">
+                  {variacoes.map((variacao) => (
+                    <button
+                      key={variacao.id}
+                      onClick={() => setSelectedVariation(variacao)}
+                      className={cn(
+                        "w-full flex items-center justify-between px-4 py-3 rounded-xl border-2 transition-all",
+                        selectedVariation?.id === variacao.id
+                          ? "border-primary bg-primary/10 shadow-md"
+                          : "border-border hover:border-primary/50"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                          selectedVariation?.id === variacao.id
+                            ? "border-primary bg-primary"
+                            : "border-muted-foreground"
+                        )}>
+                          {selectedVariation?.id === variacao.id && (
+                            <Check className="h-3 w-3 text-primary-foreground" />
+                          )}
+                        </div>
+                        <span className="font-medium">{variacao.name}</span>
+                      </div>
+                      <span className="font-bold text-primary">R$ {variacao.price.toFixed(2)}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {grupos.map(group => {
               const groupOptions = opcoes.filter(o => o.option_group === group)
               return (
@@ -208,10 +285,10 @@ export function ProdutoCard({ produto }: { produto: Produto }) {
             </button>
             <button
               onClick={confirmarAdicao}
-              disabled={!todosGruposSelecionados}
+              disabled={!podeConfirmar}
               className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground font-bold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Adicionar R$ {(produto.preco * quantidade).toFixed(2)}
+              Adicionar R$ {(precoFinal * quantidade).toFixed(2)}
             </button>
           </div>
         </DialogContent>
