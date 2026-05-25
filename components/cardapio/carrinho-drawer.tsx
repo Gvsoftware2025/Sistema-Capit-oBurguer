@@ -210,15 +210,19 @@ export function CarrinhoDrawer() {
             <div className="mt-5 flex flex-col gap-3 border-t border-border/60 pt-4">
               <div>
                 <Label htmlFor="cliente" className="text-xs uppercase tracking-wider text-muted-foreground">
-                  Nome
+                  Nome <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="cliente"
                   value={cliente}
                   onChange={(e) => setCliente(e.target.value)}
                   placeholder="Seu nome"
-                  className="mt-1 bg-input/40"
+                  required
+                  className={`mt-1 bg-input/40 ${!cliente.trim() ? "border-red-500/50" : ""}`}
                 />
+                {!cliente.trim() && (
+                  <p className="text-xs text-red-500 mt-1">Nome obrigatório</p>
+                )}
               </div>
               <div>
                 <Label htmlFor="telefone" className="text-xs uppercase tracking-wider text-muted-foreground">
