@@ -116,7 +116,7 @@ export function imprimirPedido(pedido: Pedido) {
         
         body { 
           font-family: 'Courier New', Courier, monospace; 
-          font-size: 14px; 
+          font-size: 18px; 
           width: 58mm; 
           padding: 2mm;
           background: white;
@@ -143,80 +143,80 @@ export function imprimirPedido(pedido: Pedido) {
         }
         
         .logo {
-          font-size: 18px;
+          font-size: 22px;
           font-weight: bold;
           letter-spacing: 0;
         }
         
         .order-number {
           text-align: center;
-          padding: 6px 0;
-          margin: 4px 0;
-          border: 2px solid #000;
-          font-size: 20px;
+          padding: 8px 0;
+          margin: 6px 0;
+          border: 3px solid #000;
+          font-size: 24px;
           font-weight: bold;
         }
         
         .info {
-          font-size: 13px;
-          padding: 2px 0;
+          font-size: 16px;
+          padding: 3px 0;
         }
         
         .customer {
-          padding: 4px 0;
+          padding: 6px 0;
           border-top: 1px dashed #000;
           border-bottom: 1px dashed #000;
-          margin: 4px 0;
+          margin: 6px 0;
         }
         
         .customer-name {
-          font-size: 16px;
+          font-size: 20px;
           font-weight: bold;
         }
         
         .delivery-type {
-          font-size: 14px;
+          font-size: 18px;
           font-weight: bold;
           border: 2px solid #000;
           display: inline-block;
-          padding: 2px 6px;
-          margin-top: 2px;
+          padding: 4px 8px;
+          margin-top: 4px;
         }
         
         .address {
-          font-size: 13px;
-          margin-top: 2px;
+          font-size: 16px;
+          margin-top: 4px;
         }
         
         .items-title {
           text-align: center;
-          font-size: 14px;
+          font-size: 18px;
           font-weight: bold;
-          padding: 4px 0;
+          padding: 6px 0;
           border-bottom: 1px dashed #000;
         }
         
         .item {
-          padding: 4px 0;
+          padding: 6px 0;
           border-bottom: 1px dotted #ccc;
         }
         
         .item-row {
           display: flex;
           justify-content: space-between;
-          font-size: 14px;
+          font-size: 18px;
           font-weight: bold;
         }
         
         .item-detail {
-          font-size: 13px;
+          font-size: 16px;
           padding-left: 8px;
           font-weight: bold;
           color: #000;
         }
         
         .item-special {
-          font-size: 13px;
+          font-size: 16px;
           font-weight: bold;
           padding-left: 4px;
           margin-top: 2px;
