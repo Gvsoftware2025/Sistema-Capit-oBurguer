@@ -195,8 +195,17 @@ export async function POST(request: Request) {
       const itemQuantidade = Number(item.quantidade || item.quantity || 1)
       const itemPreco = Number(item.preco || item.precoUnitario || item.price || item.unit_price || item.product_price || 0)
       
+      // Extrair variacao do nome se estiver no formato "Produto (Variacao)"
+      let nomeBase = itemNome
+      let variacaoExtraida = null
+      const matchVariacao = itemNome.match(/^(.+?)\s*\(([^)]+)\)$/)
+      if (matchVariacao) {
+        nomeBase = matchVariacao[1].trim()
+        variacaoExtraida = matchVariacao[2].trim()
+      }
+      
       // Extrair detalhes do item
-      const variacao = item.variacao || item.variation || item.variation_name || item.observacao || null
+      const variacao = item.variacao || item.variation || item.variation_name || variacaoExtraida || null
       const maionese = item.maionese || item.mayo || null
       // extra_maioneses é TEXT[] no banco, não JSON
       const extraMaionesisArr = item.extraMaioneses || item.extra_maioneses || []
@@ -212,7 +221,7 @@ export async function POST(request: Request) {
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
         [
           pedido.id, 
-          itemNome, 
+          nomeBase, 
           itemPreco,
           itemQuantidade, 
           variacao,

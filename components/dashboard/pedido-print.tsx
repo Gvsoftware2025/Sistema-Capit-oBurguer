@@ -225,40 +225,47 @@ export function imprimirPedido(pedido: Pedido) {
         
         .total {
           text-align: center;
-          padding: 6px 0;
-          margin-top: 4px;
-          border: 2px solid #000;
+          padding: 8px 0;
+          margin-top: 6px;
+          background: #000;
+          color: #fff !important;
         }
         
         .total-label {
-          font-size: 12px;
+          font-size: 14px;
+          color: #fff !important;
         }
         
         .total-value {
-          font-size: 24px;
+          font-size: 28px;
           font-weight: bold;
+          color: #fff !important;
         }
         
         .payment {
           text-align: center;
-          padding: 6px 0;
-          margin-top: 4px;
-          border: 2px solid #000;
+          padding: 8px 0;
+          margin-top: 6px;
+          background: #000;
+          color: #fff !important;
         }
         
         .payment-label {
-          font-size: 12px;
+          font-size: 14px;
           font-weight: bold;
+          color: #fff !important;
         }
         
         .payment-value {
-          font-size: 16px;
+          font-size: 18px;
           font-weight: bold;
+          color: #fff !important;
         }
         
         .change {
-          font-size: 13px;
-          margin-top: 2px;
+          font-size: 14px;
+          margin-top: 4px;
+          color: #fff !important;
         }
         
         .footer {
@@ -306,7 +313,7 @@ export function imprimirPedido(pedido: Pedido) {
       ${pedido.itens.map((item) => `
         <div class="item">
           <div class="item-row">
-            <span>${item.quantidade}x ${item.nome}</span>
+            <span>${item.quantidade}x ${item.nome}${item.variacao ? ` (${item.variacao})` : ""}</span>
             <span>R$${(item.preco * item.quantidade).toFixed(2)}</span>
           </div>
           ${item.acompanhamentos ? `<div class="item-special">* ${item.acompanhamentos}</div>` : ""}
