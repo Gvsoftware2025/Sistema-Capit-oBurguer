@@ -1,17 +1,31 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import Link from "next/link"
-import { ArrowLeft, Search } from "lucide-react"
+import { ArrowLeft, Search, Clock } from "lucide-react"
 import { CATEGORIAS, PRODUTOS } from "@/lib/produtos"
 import type { CategoriaId } from "@/lib/types"
 import { CategoriaPills } from "./categoria-pills"
 import { ProdutoCard } from "./produto-card"
 import { CarrinhoDrawer } from "./carrinho-drawer"
+import { getHorarioFuncionamento } from "@/lib/horario-funcionamento"
 
 export function CardapioView() {
   const [categoria, setCategoria] = useState<CategoriaId>("burgueres")
   const [busca, setBusca] = useState("")
+  const [horario, setHorario] = useState<ReturnType<typeof getHorarioFuncionamento> | null>(null)
+
+  useEffect(() => {
+    // Verificar horário no cliente
+    setHorario(getHorarioFuncionamento())
+    
+    // Atualizar a cada minuto
+    const interval = setInterval(() => {
+      setHorario(getHorarioFuncionamento())
+    }, 60000)
+    
+    return () => clearInterval(interval)
+  }, [])
 
   const produtosFiltrados = useMemo(() => {
     const q = busca.trim().toLowerCase()
@@ -39,6 +53,20 @@ export function CardapioView() {
         aria-hidden
       />
       <div className="fixed inset-0 -z-10 bg-background/85" aria-hidden />
+
+      {/* Banner de Fechado */}
+      {horario && !horario.estaAberto && (
+        <div className="bg-red-600 text-white py-3 px-4 text-center">
+          <div className="flex items-center justify-center gap-2">
+            <Clock className="h-5 w-5" />
+            <span className="font-bold">ESTAMOS FECHADOS</span>
+          </div>
+          <p className="text-sm mt-1">
+            Horario: {horario.isFimDeSemana ? "Sex-Dom" : "Seg-Qui"} das 18:00 as {horario.horaFechamento}
+          </p>
+          <p className="text-sm">{horario.proximaAbertura}</p>
+        </div>
+      )}
 
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-border/40 bg-background/80 backdrop-blur-md">
