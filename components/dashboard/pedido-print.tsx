@@ -116,7 +116,7 @@ export function imprimirPedido(pedido: Pedido) {
         
         body { 
           font-family: 'Courier New', Courier, monospace; 
-          font-size: 12px; 
+          font-size: 15px; 
           width: 58mm; 
           padding: 2mm;
           background: white;
@@ -143,7 +143,7 @@ export function imprimirPedido(pedido: Pedido) {
         }
         
         .logo {
-          font-size: 14px;
+          font-size: 18px;
           font-weight: bold;
           letter-spacing: 0;
         }
@@ -153,12 +153,12 @@ export function imprimirPedido(pedido: Pedido) {
           padding: 6px 0;
           margin: 4px 0;
           border: 2px solid #000;
-          font-size: 16px;
+          font-size: 20px;
           font-weight: bold;
         }
         
         .info {
-          font-size: 11px;
+          font-size: 14px;
           padding: 2px 0;
         }
         
@@ -170,12 +170,12 @@ export function imprimirPedido(pedido: Pedido) {
         }
         
         .customer-name {
-          font-size: 14px;
+          font-size: 17px;
           font-weight: bold;
         }
         
         .delivery-type {
-          font-size: 11px;
+          font-size: 14px;
           font-weight: bold;
           border: 2px solid #000;
           display: inline-block;
@@ -184,13 +184,13 @@ export function imprimirPedido(pedido: Pedido) {
         }
         
         .address {
-          font-size: 10px;
+          font-size: 13px;
           margin-top: 2px;
         }
         
         .items-title {
           text-align: center;
-          font-size: 11px;
+          font-size: 14px;
           font-weight: bold;
           padding: 4px 0;
           border-bottom: 1px dashed #000;
@@ -204,19 +204,19 @@ export function imprimirPedido(pedido: Pedido) {
         .item-row {
           display: flex;
           justify-content: space-between;
-          font-size: 12px;
+          font-size: 15px;
           font-weight: bold;
         }
         
         .item-detail {
-          font-size: 11px;
+          font-size: 14px;
           padding-left: 8px;
           font-weight: bold;
           color: #000;
         }
         
         .item-special {
-          font-size: 11px;
+          font-size: 14px;
           font-weight: bold;
           padding-left: 4px;
           margin-top: 2px;
@@ -231,11 +231,11 @@ export function imprimirPedido(pedido: Pedido) {
         }
         
         .total-label {
-          font-size: 10px;
+          font-size: 13px;
         }
         
         .total-value {
-          font-size: 20px;
+          font-size: 26px;
           font-weight: bold;
         }
         
@@ -247,24 +247,24 @@ export function imprimirPedido(pedido: Pedido) {
         }
         
         .payment-label {
-          font-size: 10px;
+          font-size: 13px;
           font-weight: bold;
         }
         
         .payment-value {
-          font-size: 14px;
+          font-size: 18px;
           font-weight: bold;
         }
         
         .change {
-          font-size: 11px;
+          font-size: 14px;
           margin-top: 2px;
         }
         
         .footer {
           text-align: center;
           padding-top: 4px;
-          font-size: 9px;
+          font-size: 11px;
           border-top: 1px dashed #000;
           margin-top: 4px;
         }
