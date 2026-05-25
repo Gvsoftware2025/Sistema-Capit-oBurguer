@@ -225,47 +225,40 @@ export function imprimirPedido(pedido: Pedido) {
         
         .total {
           text-align: center;
-          padding: 8px 0;
-          margin-top: 6px;
-          background: #000;
-          color: #fff !important;
+          padding: 10px 0;
+          margin-top: 8px;
+          border: 3px solid #000;
         }
         
         .total-label {
-          font-size: 14px;
-          color: #fff !important;
+          font-size: 18px;
         }
         
         .total-value {
-          font-size: 28px;
+          font-size: 36px;
           font-weight: bold;
-          color: #fff !important;
         }
         
         .payment {
           text-align: center;
-          padding: 8px 0;
-          margin-top: 6px;
-          background: #000;
-          color: #fff !important;
+          padding: 10px 0;
+          margin-top: 8px;
+          border: 3px solid #000;
         }
         
         .payment-label {
-          font-size: 14px;
+          font-size: 16px;
           font-weight: bold;
-          color: #fff !important;
         }
         
         .payment-value {
-          font-size: 18px;
+          font-size: 24px;
           font-weight: bold;
-          color: #fff !important;
         }
         
         .change {
-          font-size: 14px;
-          margin-top: 4px;
-          color: #fff !important;
+          font-size: 18px;
+          margin-top: 6px;
         }
         
         .footer {
