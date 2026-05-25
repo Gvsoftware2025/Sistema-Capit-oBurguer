@@ -73,14 +73,14 @@ export function imprimirPedido(pedido: Pedido) {
       <title>Pedido #${pedido.numero}</title>
       <style>
         @page {
-          size: 58mm 297mm;
+          size: 80mm 297mm;
           margin: 0 !important;
           padding: 0 !important;
         }
         
         @media print {
           html, body {
-            width: 58mm !important;
+            width: 80mm !important;
             height: auto !important;
             margin: 0 !important;
             padding: 0 !important;
@@ -92,7 +92,7 @@ export function imprimirPedido(pedido: Pedido) {
             page-break-after: auto !important;
             page-break-before: auto !important;
             break-inside: avoid !important;
-            width: 58mm !important;
+            width: 80mm !important;
           }
           .total, .payment, .footer {
             page-break-inside: avoid !important;
@@ -117,8 +117,8 @@ export function imprimirPedido(pedido: Pedido) {
         body { 
           font-family: 'Courier New', Courier, monospace; 
           font-size: 22px; 
-          width: 58mm; 
-          padding: 2mm;
+          width: 80mm; 
+          padding: 3mm;
           background: white;
           color: #000;
           line-height: 1.4;
