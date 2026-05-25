@@ -116,12 +116,12 @@ export function imprimirPedido(pedido: Pedido) {
         
         body { 
           font-family: 'Courier New', Courier, monospace; 
-          font-size: 22px; 
+          font-size: 16px; 
           width: 80mm; 
-          padding: 3mm;
+          padding: 2mm;
           background: white;
           color: #000;
-          line-height: 1.4;
+          line-height: 1.2;
           font-weight: bold;
         }
         
@@ -133,140 +133,140 @@ export function imprimirPedido(pedido: Pedido) {
         
         .center { text-align: center; }
         .bold { font-weight: bold; }
-        .line { border-top: 1px dashed #000; margin: 4px 0; }
-        .line-double { border-top: 2px solid #000; margin: 4px 0; }
+        .line { border-top: 1px dashed #000; margin: 2px 0; }
+        .line-double { border-top: 2px solid #000; margin: 2px 0; }
         
         .header {
           text-align: center;
-          padding-bottom: 4px;
+          padding-bottom: 2px;
           border-bottom: 2px solid #000;
         }
         
         .logo {
-          font-size: 26px;
+          font-size: 20px;
           font-weight: bold;
           letter-spacing: 0;
         }
         
         .order-number {
           text-align: center;
-          padding: 8px 0;
-          margin: 6px 0;
-          border: 3px solid #000;
-          font-size: 28px;
+          padding: 4px 0;
+          margin: 3px 0;
+          border: 2px solid #000;
+          font-size: 20px;
           font-weight: bold;
         }
         
         .info {
-          font-size: 20px;
-          padding: 3px 0;
+          font-size: 14px;
+          padding: 1px 0;
         }
         
         .customer {
-          padding: 6px 0;
+          padding: 3px 0;
           border-top: 1px dashed #000;
           border-bottom: 1px dashed #000;
-          margin: 6px 0;
+          margin: 3px 0;
         }
         
         .customer-name {
-          font-size: 24px;
+          font-size: 18px;
           font-weight: bold;
         }
         
         .delivery-type {
-          font-size: 20px;
+          font-size: 14px;
           font-weight: bold;
           border: 2px solid #000;
           display: inline-block;
-          padding: 4px 8px;
-          margin-top: 4px;
+          padding: 2px 6px;
+          margin-top: 2px;
         }
         
         .address {
-          font-size: 18px;
-          margin-top: 4px;
+          font-size: 14px;
+          margin-top: 2px;
         }
         
         .items-title {
           text-align: center;
-          font-size: 20px;
+          font-size: 14px;
           font-weight: bold;
-          padding: 6px 0;
+          padding: 3px 0;
           border-bottom: 1px dashed #000;
         }
         
         .item {
-          padding: 6px 0;
+          padding: 3px 0;
           border-bottom: 1px dotted #ccc;
         }
         
         .item-row {
           display: flex;
           justify-content: space-between;
-          font-size: 22px;
+          font-size: 16px;
           font-weight: bold;
         }
         
         .item-detail {
-          font-size: 20px;
+          font-size: 14px;
           padding-left: 8px;
           font-weight: bold;
           color: #000;
         }
         
         .item-special {
-          font-size: 20px;
+          font-size: 14px;
           font-weight: bold;
           padding-left: 4px;
-          margin-top: 2px;
+          margin-top: 1px;
           color: #000;
         }
         
         .total {
           text-align: center;
-          padding: 8px 0;
-          margin-top: 6px;
-          border: 3px solid #000;
+          padding: 4px 0;
+          margin-top: 3px;
+          border: 2px solid #000;
         }
         
         .total-label {
-          font-size: 18px;
+          font-size: 14px;
         }
         
         .total-value {
-          font-size: 36px;
+          font-size: 26px;
           font-weight: bold;
         }
         
         .payment {
           text-align: center;
-          padding: 8px 0;
-          margin-top: 6px;
-          border: 3px solid #000;
+          padding: 4px 0;
+          margin-top: 3px;
+          border: 2px solid #000;
         }
         
         .payment-label {
-          font-size: 18px;
+          font-size: 14px;
           font-weight: bold;
         }
         
         .payment-value {
-          font-size: 26px;
+          font-size: 20px;
           font-weight: bold;
         }
         
         .change {
-          font-size: 20px;
-          margin-top: 4px;
+          font-size: 14px;
+          margin-top: 2px;
         }
         
         .footer {
           text-align: center;
-          padding-top: 6px;
-          font-size: 16px;
+          padding-top: 3px;
+          font-size: 12px;
           border-top: 1px dashed #000;
-          margin-top: 6px;
+          margin-top: 3px;
         }
         
         @media print {
