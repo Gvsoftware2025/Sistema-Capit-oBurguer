@@ -56,8 +56,9 @@ export function DashboardView() {
         playOrderSound()
       }
       
-      // Impressao automatica - evita duplicatas
-      if (impressaoAutomatica) {
+      // Impressao automatica - evita duplicatas e nao imprime em dispositivos moveis
+      const isMobile = typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+      if (impressaoAutomatica && !isMobile) {
         novosIds.forEach((id) => {
           // Verifica se já imprimiu esse pedido
           if (impressoesRef.current.has(id)) return

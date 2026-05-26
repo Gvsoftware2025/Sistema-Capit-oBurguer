@@ -30,7 +30,10 @@ export function RelatoriosView() {
     return true
   })
 
-  const pedidosFinalizados = pedidosFiltrados.filter((p) => p.status === "finalizado")
+  // Status "entregue" ou "finalizado" conta como finalizado
+  const pedidosFinalizados = pedidosFiltrados.filter((p) => 
+    p.status === "finalizado" || p.status === "entregue" || p.status === "pronto"
+  )
 
   // Métricas
   const faturamentoTotal = pedidosFinalizados.reduce(

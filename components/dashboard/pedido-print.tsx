@@ -209,17 +209,17 @@ export function imprimirPedido(pedido: Pedido) {
         }
         
         .item-detail {
-          font-size: 14px;
+          font-size: 16px;
           padding-left: 8px;
           font-weight: bold;
           color: #000;
         }
         
         .item-special {
-          font-size: 14px;
+          font-size: 16px;
           font-weight: bold;
           padding-left: 4px;
-          margin-top: 1px;
+          margin-top: 2px;
           color: #000;
         }
         

@@ -143,14 +143,15 @@ export function NovoPedidoView() {
   })
 
   const abrirModalPersonalizacao = async (produto: Produto) => {
-    setProdutoSelecionado(produto)
+    // Limpa TUDO antes de carregar novo produto
+    setProductOptions([])
+    setSelectedOptions({})
     setMaioneseSelecionada("")
     setExtraMaioneses([])
     setAdicionaisSelecionados({})
     setObservacaoItem("")
     setQuantidadeItem(1)
-    setSelectedOptions({})
-    setProductOptions([])
+    setProdutoSelecionado(produto)
     setModalAberto(true)
     
     // Carregar opcoes especiais do produto
@@ -160,9 +161,12 @@ export function NovoPedidoView() {
       const data = await res.json()
       if (data.options && data.options.length > 0) {
         setProductOptions(data.options)
+      } else {
+        setProductOptions([])
       }
     } catch (error) {
       console.error("Erro ao carregar opcoes:", error)
+      setProductOptions([])
     } finally {
       setLoadingOptions(false)
     }
