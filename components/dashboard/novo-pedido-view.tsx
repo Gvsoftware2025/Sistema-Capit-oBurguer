@@ -682,8 +682,8 @@ export function NovoPedidoView() {
               </div>
             </div>
 
-            {/* Maionese Gratis */}
-            {maioneses.length > 0 && (
+            {/* Maionese Gratis - Só mostra se NAO tiver variacoes (lanches sim, batata nao) */}
+            {maioneses.length > 0 && productVariations.length === 0 && (
               <div>
                 <label className="text-sm font-medium text-muted-foreground mb-2 block">
                   Escolha sua Maionese <span className="text-green-500">(Gratis)</span>
@@ -708,8 +708,8 @@ export function NovoPedidoView() {
               </div>
             )}
 
-            {/* Maioneses Extras */}
-            {maioneses.length > 0 && (
+            {/* Maioneses Extras - Só mostra se NAO tiver variacoes */}
+            {maioneses.length > 0 && productVariations.length === 0 && (
               <div>
                 <label className="text-sm font-medium text-muted-foreground mb-2 block">
                   Maioneses Extras <span className="text-blue-400">(+R$ 2,00 cada)</span>
@@ -740,8 +740,8 @@ export function NovoPedidoView() {
               </div>
             )}
 
-            {/* Adicionais */}
-            {adicionais.length > 0 && (
+            {/* Adicionais - Só mostra se NAO tiver variacoes */}
+            {adicionais.length > 0 && productVariations.length === 0 && (
               <div>
                 <label className="text-sm font-medium text-muted-foreground mb-2 block">
                   Adicionais <span className="text-amber-500">(Opcional)</span>
