@@ -234,6 +234,36 @@ export async function POST(request: Request) {
       )
     }
 
+    // Salvar no historico de vendas (para relatorios persistentes)
+    try {
+      const itensJson = JSON.stringify(itens.map((item: any) => ({
+        nome: item.nome || item.name || item.produto || item.product_name || "Item",
+        quantidade: Number(item.quantidade || item.quantity || 1),
+        preco: Number(item.preco || item.precoUnitario || item.price || 0),
+        variacao: item.variacao || null
+      })))
+
+      await query(
+        `INSERT INTO ${SCHEMA}.sales_history 
+         (order_id, order_number, customer_name, delivery_type, payment_method, subtotal, delivery_fee, total, items_json)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+        [
+          pedido.id,
+          pedido.order_number,
+          pedido.customer_name,
+          tipo || "retirar",
+          pagamento || "dinheiro",
+          subtotal,
+          taxaEntrega,
+          totalFinal,
+          itensJson
+        ]
+      )
+    } catch (historyError) {
+      // Nao falha o pedido se o historico falhar
+      console.error("[API] Erro ao salvar historico:", historyError)
+    }
+
     return NextResponse.json({
       pedido: {
         id: pedido.id.toString(),

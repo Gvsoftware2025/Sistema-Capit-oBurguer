@@ -89,3 +89,18 @@ export interface DbProductOption {
   display_order: number
   is_available: boolean
 }
+
+// Historico de vendas (persiste mesmo depois de apagar pedidos)
+export interface DbSalesHistory {
+  id: number
+  order_id: number
+  order_number: number
+  customer_name: string
+  delivery_type: "entregar" | "retirar"
+  payment_method: string
+  subtotal: number
+  delivery_fee: number
+  total: number
+  items_json: string  // JSON string dos itens
+  created_at: Date
+}

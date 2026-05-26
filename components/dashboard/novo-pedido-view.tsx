@@ -67,6 +67,14 @@ type ProductOption = {
   is_available: boolean
 }
 
+type ProductVariation = {
+  id: number
+  product_id: number
+  name: string
+  price: number
+  is_available: boolean
+}
+
 type Etapa = "cliente" | "cardapio" | "resumo"
 
 export function NovoPedidoView() {
@@ -99,6 +107,10 @@ export function NovoPedidoView() {
   const [productOptions, setProductOptions] = useState<ProductOption[]>([])
   const [selectedOptions, setSelectedOptions] = useState<{ [group: string]: string }>({})
   const [loadingOptions, setLoadingOptions] = useState(false)
+  
+  // Variacoes de produtos (Individual, Meia, Inteira)
+  const [productVariations, setProductVariations] = useState<ProductVariation[]>([])
+  const [selectedVariation, setSelectedVariation] = useState<ProductVariation | null>(null)
 
   // Carregar dados do banco
   useEffect(() => {
@@ -146,6 +158,8 @@ export function NovoPedidoView() {
     // Limpa TUDO antes de carregar novo produto
     setProductOptions([])
     setSelectedOptions({})
+    setProductVariations([])
+    setSelectedVariation(null)
     setMaioneseSelecionada("")
     setExtraMaioneses([])
     setAdicionaisSelecionados({})
@@ -154,19 +168,31 @@ export function NovoPedidoView() {
     setProdutoSelecionado(produto)
     setModalAberto(true)
     
-    // Carregar opcoes especiais do produto
+    // Carregar opcoes especiais e variacoes do produto
     setLoadingOptions(true)
     try {
-      const res = await fetch(`/api/cardapio/product-options?product_id=${produto.id}`)
-      const data = await res.json()
-      if (data.options && data.options.length > 0) {
-        setProductOptions(data.options)
+      const [optionsRes, variationsRes] = await Promise.all([
+        fetch(`/api/cardapio/product-options?product_id=${produto.id}`),
+        fetch(`/api/cardapio/variacoes?product_id=${produto.id}`)
+      ])
+      
+      const optionsData = await optionsRes.json()
+      const variationsData = await variationsRes.json()
+      
+      if (optionsData.options && optionsData.options.length > 0) {
+        setProductOptions(optionsData.options)
       } else {
         setProductOptions([])
       }
+      
+      // Filtrar variacoes pelo product_id
+      const variacoesDoProduto = (variationsData.variacoes || [])
+        .filter((v: ProductVariation) => v.product_id === produto.id && v.is_available)
+      setProductVariations(variacoesDoProduto)
     } catch (error) {
       console.error("Erro ao carregar opcoes:", error)
       setProductOptions([])
+      setProductVariations([])
     } finally {
       setLoadingOptions(false)
     }
@@ -174,6 +200,12 @@ export function NovoPedidoView() {
 
   const adicionarAoCarrinho = () => {
     if (!produtoSelecionado) return
+    
+    // Se tem variacoes e nenhuma foi selecionada, exigir selecao
+    if (productVariations.length > 0 && !selectedVariation) {
+      toast.error("Selecione uma opcao de tamanho!")
+      return
+    }
 
     const adicionaisArr = Object.entries(adicionaisSelecionados)
       .filter(([, qty]) => qty > 0)
@@ -190,11 +222,17 @@ export function NovoPedidoView() {
         .join(", ")
     }
 
+    // Usar preco e nome da variacao se selecionada
+    const precoFinal = selectedVariation ? selectedVariation.price : Number(produtoSelecionado.price)
+    const nomeFinal = selectedVariation 
+      ? `${produtoSelecionado.name} (${selectedVariation.name})`
+      : produtoSelecionado.name
+
     const novoItem: ItemCarrinho = {
       id: `${produtoSelecionado.id}-${Date.now()}`,
       produtoId: produtoSelecionado.id,
-      nome: produtoSelecionado.name,
-      preco: Number(produtoSelecionado.price),
+      nome: nomeFinal,
+      preco: precoFinal,
       quantidade: quantidadeItem,
       maionese: maioneseSelecionada || undefined,
       extraMaioneses: extraMaioneses.length > 0 ? extraMaioneses : undefined,
@@ -205,7 +243,7 @@ export function NovoPedidoView() {
 
     setItens((prev) => [...prev, novoItem])
     setModalAberto(false)
-    toast.success(`${produtoSelecionado.name} adicionado!`)
+    toast.success(`${nomeFinal} adicionado!`)
   }
 
   const removerDoCarrinho = (itemId: string) => {
@@ -584,6 +622,44 @@ export function NovoPedidoView() {
                   )
                 })}
               </>
+            )}
+
+            {/* Variacoes de Tamanho (Individual, Meia, Inteira) */}
+            {!loadingOptions && productVariations.length > 0 && (
+              <div>
+                <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                  Tamanho: <span className="text-red-500">* Obrigatorio</span>
+                </label>
+                <div className="space-y-2">
+                  {productVariations.map((v) => (
+                    <button
+                      key={v.id}
+                      onClick={() => setSelectedVariation(v)}
+                      className={cn(
+                        "w-full flex items-center justify-between px-4 py-3 rounded-xl border-2 transition-all",
+                        selectedVariation?.id === v.id
+                          ? "border-primary bg-primary/10 shadow-md"
+                          : "border-border hover:border-primary/50"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                          selectedVariation?.id === v.id
+                            ? "border-primary bg-primary"
+                            : "border-muted-foreground"
+                        )}>
+                          {selectedVariation?.id === v.id && (
+                            <Check className="h-3 w-3 text-primary-foreground" />
+                          )}
+                        </div>
+                        <span className="font-medium">{v.name}</span>
+                      </div>
+                      <span className="font-bold text-primary">R$ {Number(v.price).toFixed(2)}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
 
             {/* Quantidade */}
