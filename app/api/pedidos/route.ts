@@ -43,18 +43,28 @@ export async function GET(request: Request) {
 
 
     // Mapear para o formato do frontend
-    const pedidosMapeados = pedidos.map((p) => ({
-      id: p.id.toString(),
-      numero: p.order_number,
-      cliente: p.customer_name,
-      endereco: p.customer_address,
-      tipo: p.delivery_type === "entregar" ? "entrega" : "retirada",
-      pagamento: p.payment_method,
-      troco: p.cash_amount ? Number(p.cash_amount) : undefined,
-      total: Number(p.total),
-      status: p.status === "pendente" ? "novo" : p.status,
-      criadoEm: p.created_at,
-      itens: (p.items || []).map((it: any) => {
+    const pedidosMapeados = pedidos.map((p) => {
+      // Determinar tipo do pedido
+      let tipo = "retirada"
+      if (p.delivery_type === "entregar" || p.delivery_type === "entrega") {
+        tipo = "entrega"
+      } else if (p.delivery_type === "mesa" || p.table_number) {
+        tipo = "mesa"
+      }
+
+      return {
+        id: p.id.toString(),
+        numero: p.order_number,
+        cliente: p.customer_name,
+        endereco: p.customer_address,
+        tipo,
+        mesa: p.table_number ? Number(p.table_number) : undefined,
+        pagamento: p.payment_method,
+        troco: p.cash_amount ? Number(p.cash_amount) : undefined,
+        total: Number(p.total),
+        status: p.status === "pendente" ? "novo" : p.status,
+        criadoEm: p.created_at,
+        itens: (p.items || []).map((it: any) => {
         // Parsear adicionais - pode ser array de strings ou array de objetos JSON
         let adicionaisParsed: any[] = []
         if (it.addons) {
@@ -99,7 +109,7 @@ export async function GET(request: Request) {
           preco: Number(it.itemTotal) / it.quantity,
         }
       }),
-    }))
+    }})
 
     return NextResponse.json({ pedidos: pedidosMapeados })
   } catch (error) {

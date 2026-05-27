@@ -37,7 +37,7 @@ export type ItemPedido = {
   observacao?: string
 }
 
-export type TipoPedido = "retirada" | "entrega" | "balcao"
+export type TipoPedido = "retirada" | "entrega" | "balcao" | "mesa"
 export type StatusPedido = "novo" | "preparando" | "finalizado"
 export type OrigemPedido = "cliente" | "funcionario"
 export type FormaPagamento = "dinheiro" | "pix" | "cartao_credito" | "cartao_debito"
@@ -49,6 +49,7 @@ export type Pedido = {
   telefone?: string
   endereco?: string
   tipo: TipoPedido
+  mesa?: number  // Numero da mesa quando tipo = "mesa"
   origem: OrigemPedido
   itens: ItemPedido[]
   observacao?: string

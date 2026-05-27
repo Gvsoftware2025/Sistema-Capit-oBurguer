@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-type StatusFiltro = "todos" | "novo" | "preparando" | "pronto"
+type StatusFiltro = "todos" | "novo" | "preparando" | "pronto" | "mesa"
 
 interface FiltrosPedidosProps {
   filtroAtivo: StatusFiltro
@@ -21,6 +21,7 @@ interface FiltrosPedidosProps {
     novo: number
     preparando: number
     pronto: number
+    mesa: number
   }
   ordenacao: string
   onOrdenacaoChange: (ordenacao: string) => void
@@ -44,6 +45,7 @@ export function FiltrosPedidos({
     { value: "novo", label: "Novos", color: "red" },
     { value: "preparando", label: "Preparando", color: "amber" },
     { value: "pronto", label: "Prontos", color: "green" },
+    { value: "mesa", label: "Mesa", color: "emerald" },
   ]
 
   const getColorClasses = (color: string, isActive: boolean) => {
@@ -53,6 +55,7 @@ export function FiltrosPedidos({
       case "red": return "bg-red-600 text-white border-red-500 shadow-lg shadow-red-500/25"
       case "amber": return "bg-amber-500 text-black border-amber-400 shadow-lg shadow-amber-500/25"
       case "green": return "bg-green-600 text-white border-green-500 shadow-lg shadow-green-500/25"
+      case "emerald": return "bg-emerald-600 text-white border-emerald-500 shadow-lg shadow-emerald-500/25"
       default: return "bg-primary text-primary-foreground border-primary"
     }
   }

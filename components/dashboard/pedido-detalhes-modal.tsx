@@ -18,6 +18,7 @@ import {
   Store,
   X,
   Plus,
+  UtensilsCrossed,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Pedido } from "@/lib/types"
@@ -54,6 +55,7 @@ export function PedidoDetalhesModal({
   const getTipoIcon = () => {
     switch (pedido.tipo) {
       case "entrega": return <Truck className="h-5 w-5" />
+      case "mesa": return <UtensilsCrossed className="h-5 w-5 text-emerald-500" />
       case "retirada": return <Package className="h-5 w-5" />
       default: return <Store className="h-5 w-5" />
     }
@@ -62,10 +64,13 @@ export function PedidoDetalhesModal({
   const getTipoLabel = () => {
     switch (pedido.tipo) {
       case "entrega": return "Entrega"
+      case "mesa": return `Mesa ${pedido.mesa || ""}`
       case "retirada": return "Retirada"
-      default: return `Mesa ${pedido.mesa || ""}`
+      default: return "Balcao"
     }
   }
+
+  const isMesa = pedido.tipo === "mesa"
 
   return (
     <Dialog open={aberto} onOpenChange={onFechar}>
@@ -104,7 +109,10 @@ export function PedidoDetalhesModal({
               </div>
             )}
 
-            <div className="flex items-center gap-3">
+            <div className={cn(
+              "flex items-center gap-3",
+              isMesa && "text-emerald-500 font-semibold"
+            )}>
               {getTipoIcon()}
               <span className="text-sm font-medium">{getTipoLabel()}</span>
             </div>

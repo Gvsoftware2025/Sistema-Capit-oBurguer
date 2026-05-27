@@ -1,6 +1,6 @@
 "use client"
 
-import { Clock, Package, Truck, User, CheckCircle, Store, Trash2 } from "lucide-react"
+import { Clock, Package, Truck, User, CheckCircle, Store, Trash2, UtensilsCrossed } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import type { Pedido } from "@/lib/types"
@@ -80,6 +80,7 @@ export function PedidoCard({ pedido, onFinalizar, onAvancar, onClickDetalhes, on
   const getTipoIcon = () => {
     switch (pedido.tipo) {
       case "entrega": return <Truck className="h-4 w-4" />
+      case "mesa": return <UtensilsCrossed className="h-4 w-4 text-emerald-500" />
       case "retirada": return <Package className="h-4 w-4" />
       default: return <Store className="h-4 w-4" />
     }
@@ -88,18 +89,21 @@ export function PedidoCard({ pedido, onFinalizar, onAvancar, onClickDetalhes, on
   const getTipoLabel = () => {
     switch (pedido.tipo) {
       case "entrega": return "Entrega"
+      case "mesa": return `Mesa ${pedido.mesa || ""}`
       case "retirada": return "Retirada"
-      default: return `Mesa ${pedido.mesa || ""}`
+      default: return "Balcao"
     }
   }
+
+  const isMesa = pedido.tipo === "mesa"
 
   return (
     <div
       onClick={() => onClickDetalhes?.(pedido)}
       className={cn(
         "flex flex-col rounded-xl border-2 bg-card/80 backdrop-blur-sm overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 cursor-pointer",
-        config.border,
-        config.glow,
+        isMesa ? "border-emerald-500/60" : config.border,
+        isMesa ? "shadow-[0_0_20px_rgba(16,185,129,0.3)]" : config.glow,
         pedido.status === "novo" && "animate-pulse-border"
       )}
     >
@@ -131,7 +135,10 @@ export function PedidoCard({ pedido, onFinalizar, onAvancar, onClickDetalhes, on
         </div>
 
         {/* Tipo */}
-        <div className="flex items-center gap-2 text-muted-foreground">
+        <div className={cn(
+          "flex items-center gap-2",
+          isMesa ? "text-emerald-500 font-semibold" : "text-muted-foreground"
+        )}>
           {getTipoIcon()}
           <span className="text-xs">{getTipoLabel()}</span>
         </div>

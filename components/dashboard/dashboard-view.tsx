@@ -133,7 +133,9 @@ export function DashboardView() {
   const pedidosFiltrados =
     filtroAtivo === "todos"
       ? pedidosAtivos
-      : pedidosAtivos.filter((p) => p.status === filtroAtivo)
+      : filtroAtivo === "mesa"
+        ? pedidosAtivos.filter((p) => p.tipo === "mesa")
+        : pedidosAtivos.filter((p) => p.status === filtroAtivo)
 
   const pedidosOrdenados = [...pedidosFiltrados].sort((a, b) => {
     if (ordenacao === "recentes") return new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime()
@@ -146,6 +148,7 @@ export function DashboardView() {
     novo: pedidosAtivos.filter((p) => p.status === "novo").length,
     preparando: pedidosAtivos.filter((p) => p.status === "preparando").length,
     pronto: pedidosAtivos.filter((p) => p.status === "pronto").length,
+    mesa: pedidosAtivos.filter((p) => p.tipo === "mesa").length,
   }
 
   return (
