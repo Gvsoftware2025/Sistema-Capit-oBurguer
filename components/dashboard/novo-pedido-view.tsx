@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search, Plus, Minus, User, Check, ArrowLeft, ArrowRight, Package, ShoppingBag, X, Loader2 } from "lucide-react"
+import { Search, Plus, Minus, User, Check, ArrowLeft, ArrowRight, Package, ShoppingBag, X, Loader2, Edit3, DollarSign } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -111,6 +111,23 @@ export function NovoPedidoView() {
   // Variacoes de produtos (Individual, Meia, Inteira)
   const [productVariations, setProductVariations] = useState<ProductVariation[]>([])
   const [selectedVariation, setSelectedVariation] = useState<ProductVariation | null>(null)
+
+  // Produto Diversos (valor editavel)
+  const [modalDiversos, setModalDiversos] = useState(false)
+  const [nomeDiversos, setNomeDiversos] = useState("")
+  const [valorDiversos, setValorDiversos] = useState("")
+  const [quantidadeDiversos, setQuantidadeDiversos] = useState(1)
+
+  // Desconto no total
+  const [desconto, setDesconto] = useState(0)
+  const [modalDesconto, setModalDesconto] = useState(false)
+  const [valorDesconto, setValorDesconto] = useState("")
+
+  // Editar item do carrinho
+  const [editandoItem, setEditandoItem] = useState<ItemCarrinho | null>(null)
+  const [modalEditarItem, setModalEditarItem] = useState(false)
+  const [novoPrecoItem, setNovoPrecoItem] = useState("")
+  const [novaQuantidadeItem, setNovaQuantidadeItem] = useState(1)
 
   // Carregar dados do banco
   useEffect(() => {
@@ -250,6 +267,75 @@ export function NovoPedidoView() {
     setItens((prev) => prev.filter((i) => i.id !== itemId))
   }
 
+  // Adicionar Produto Diversos
+  const adicionarDiversos = () => {
+    if (!nomeDiversos.trim()) {
+      toast.error("Informe o nome do produto")
+      return
+    }
+    const valor = parseFloat(valorDiversos.replace(",", "."))
+    if (isNaN(valor) || valor <= 0) {
+      toast.error("Informe um valor valido")
+      return
+    }
+
+    const novoItem: ItemCarrinho = {
+      id: `diversos-${Date.now()}`,
+      produtoId: 0,
+      nome: nomeDiversos,
+      preco: valor,
+      quantidade: quantidadeDiversos,
+    }
+
+    setItens((prev) => [...prev, novoItem])
+    setModalDiversos(false)
+    setNomeDiversos("")
+    setValorDiversos("")
+    setQuantidadeDiversos(1)
+    toast.success(`${nomeDiversos} adicionado!`)
+  }
+
+  // Aplicar desconto
+  const aplicarDesconto = () => {
+    const valor = parseFloat(valorDesconto.replace(",", "."))
+    if (isNaN(valor) || valor < 0) {
+      toast.error("Informe um valor valido")
+      return
+    }
+    setDesconto(valor)
+    setModalDesconto(false)
+    setValorDesconto("")
+    toast.success(`Desconto de R$ ${valor.toFixed(2)} aplicado!`)
+  }
+
+  // Editar item do carrinho
+  const abrirEditarItem = (item: ItemCarrinho) => {
+    setEditandoItem(item)
+    setNovoPrecoItem(item.preco.toFixed(2))
+    setNovaQuantidadeItem(item.quantidade)
+    setModalEditarItem(true)
+  }
+
+  const salvarEdicaoItem = () => {
+    if (!editandoItem) return
+    const preco = parseFloat(novoPrecoItem.replace(",", "."))
+    if (isNaN(preco) || preco < 0) {
+      toast.error("Informe um preco valido")
+      return
+    }
+    
+    setItens((prev) =>
+      prev.map((item) =>
+        item.id === editandoItem.id
+          ? { ...item, preco, quantidade: novaQuantidadeItem }
+          : item
+      )
+    )
+    setModalEditarItem(false)
+    setEditandoItem(null)
+    toast.success("Item atualizado!")
+  }
+
   const calcularTotalItem = (item: ItemCarrinho) => {
     let total = item.preco * item.quantidade
     if (item.extraMaioneses) {
@@ -263,7 +349,8 @@ export function NovoPedidoView() {
     return total
   }
 
-  const total = itens.reduce((acc, item) => acc + calcularTotalItem(item), 0)
+  const subtotal = itens.reduce((acc, item) => acc + calcularTotalItem(item), 0)
+  const total = subtotal - desconto
   const totalItens = itens.reduce((acc, item) => acc + item.quantidade, 0)
 
   const irParaCardapio = () => {
@@ -394,11 +481,27 @@ export function NovoPedidoView() {
                 {itens.map((item) => (
                   <div key={item.id} className="bg-background/50 px-3 py-2 rounded-lg">
                     <div className="flex items-center justify-between">
-                      <span>
+                      <span className="flex-1">
                         <span className="font-bold text-primary">{item.quantidade}x</span>{" "}
                         {item.nome}
                       </span>
-                      <span className="font-semibold">R$ {calcularTotalItem(item).toFixed(2)}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold">R$ {calcularTotalItem(item).toFixed(2)}</span>
+                        <button
+                          onClick={() => abrirEditarItem(item)}
+                          className="p-1 rounded hover:bg-primary/20 transition-colors"
+                          title="Editar item"
+                        >
+                          <Edit3 className="h-4 w-4 text-primary" />
+                        </button>
+                        <button
+                          onClick={() => removerDoCarrinho(item.id)}
+                          className="p-1 rounded hover:bg-red-500/20 transition-colors"
+                          title="Remover item"
+                        >
+                          <X className="h-4 w-4 text-red-500" />
+                        </button>
+                      </div>
                     </div>
                     {item.maionese && (
                       <p className="text-xs text-green-500 mt-1">Maionese: {item.maionese}</p>
@@ -433,9 +536,24 @@ export function NovoPedidoView() {
               </div>
             )}
 
-            <div className="flex items-center justify-between py-4 bg-primary/10 rounded-xl px-4 mt-4">
-              <span className="text-lg font-semibold">Total</span>
-              <span className="text-3xl font-bold text-primary">R$ {total.toFixed(2)}</span>
+            {/* Subtotal, Desconto e Total */}
+            <div className="mt-4 space-y-2">
+              {desconto > 0 && (
+                <>
+                  <div className="flex items-center justify-between px-4">
+                    <span className="text-muted-foreground">Subtotal</span>
+                    <span className="font-semibold">R$ {subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center justify-between px-4 text-red-500">
+                    <span>Desconto</span>
+                    <span>- R$ {desconto.toFixed(2)}</span>
+                  </div>
+                </>
+              )}
+              <div className="flex items-center justify-between py-4 bg-primary/10 rounded-xl px-4">
+                <span className="text-lg font-semibold">Total</span>
+                <span className="text-3xl font-bold text-primary">R$ {total.toFixed(2)}</span>
+              </div>
             </div>
           </div>
 
@@ -513,6 +631,14 @@ export function NovoPedidoView() {
               {cat.name}
             </button>
           ))}
+          {/* Botao Diversos */}
+          <button
+            onClick={() => setModalDiversos(true)}
+            className="px-2.5 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-medium transition-all whitespace-nowrap shrink-0 bg-green-600 text-white hover:bg-green-700 flex items-center gap-1"
+          >
+            <DollarSign className="h-3 w-3" />
+            Diversos
+          </button>
         </div>
       </div>
 
@@ -548,9 +674,30 @@ export function NovoPedidoView() {
       {/* Carrinho resumido */}
       {itens.length > 0 && (
         <div className="border-t-2 border-primary/30 bg-card p-3 sm:p-4 shrink-0">
+          {/* Botao de Desconto */}
+          <div className="flex items-center justify-between mb-2">
+            <button
+              onClick={() => setModalDesconto(true)}
+              className="text-xs text-primary hover:underline flex items-center gap-1"
+            >
+              <Edit3 className="h-3 w-3" />
+              {desconto > 0 ? `Desconto: R$ ${desconto.toFixed(2)}` : "Aplicar desconto"}
+            </button>
+            {desconto > 0 && (
+              <button
+                onClick={() => setDesconto(0)}
+                className="text-xs text-red-500 hover:underline"
+              >
+                Remover
+              </button>
+            )}
+          </div>
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="text-[10px] sm:text-xs text-muted-foreground">{totalItens} {totalItens === 1 ? "item" : "itens"}</p>
+              {desconto > 0 && (
+                <p className="text-xs text-muted-foreground line-through">R$ {subtotal.toFixed(2)}</p>
+              )}
               <p className="text-xl sm:text-2xl font-bold text-primary">R$ {total.toFixed(2)}</p>
             </div>
             <Button
@@ -808,12 +955,158 @@ export function NovoPedidoView() {
               onClick={adicionarAoCarrinho}
               className="w-full h-12 bg-primary hover:bg-primary/90 font-bold"
             >
-              Adicionar R$ {((Number(produtoSelecionado?.price || 0) + extraMaioneses.length * 2 + Object.entries(adicionaisSelecionados).reduce((acc, [nome, qty]) => {
+              {"Adicionar R$ " + (((selectedVariation ? selectedVariation.price : Number(produtoSelecionado?.price || 0)) + extraMaioneses.length * 2 + Object.entries(adicionaisSelecionados).reduce((acc, [nome, qty]) => {
                 const add = adicionais.find((a) => a.name === nome)
                 return acc + (add ? Number(add.price) * qty : 0)
               }, 0)) * quantidadeItem).toFixed(2)}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Produto Diversos */}
+      <Dialog open={modalDiversos} onOpenChange={setModalDiversos}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-primary flex items-center gap-2">
+              <DollarSign className="h-5 w-5" />
+              Produto Diversos
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                Nome do Produto
+              </label>
+              <Input
+                placeholder="Ex: Porcao de Calabresa"
+                value={nomeDiversos}
+                onChange={(e) => setNomeDiversos(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                Valor (R$)
+              </label>
+              <Input
+                placeholder="Ex: 25.00"
+                value={valorDiversos}
+                onChange={(e) => setValorDiversos(e.target.value)}
+                type="text"
+                inputMode="decimal"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                Quantidade
+              </label>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setQuantidadeDiversos(Math.max(1, quantidadeDiversos - 1))}
+                  className="w-10 h-10 rounded-full border border-border flex items-center justify-center"
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+                <span className="w-10 text-center text-xl font-bold">{quantidadeDiversos}</span>
+                <button
+                  onClick={() => setQuantidadeDiversos(quantidadeDiversos + 1)}
+                  className="w-10 h-10 rounded-full bg-primary flex items-center justify-center"
+                >
+                  <Plus className="h-4 w-4 text-primary-foreground" />
+                </button>
+              </div>
+            </div>
+            <Button onClick={adicionarDiversos} className="w-full h-12 bg-green-600 hover:bg-green-700 font-bold">
+              <Plus className="h-5 w-5 mr-2" />
+              Adicionar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Desconto */}
+      <Dialog open={modalDesconto} onOpenChange={setModalDesconto}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-primary flex items-center gap-2">
+              <DollarSign className="h-5 w-5" />
+              Aplicar Desconto
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                Valor do Desconto (R$)
+              </label>
+              <Input
+                placeholder="Ex: 10.00"
+                value={valorDesconto}
+                onChange={(e) => setValorDesconto(e.target.value)}
+                type="text"
+                inputMode="decimal"
+              />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Subtotal: R$ {subtotal.toFixed(2)}
+            </p>
+            <Button onClick={aplicarDesconto} className="w-full h-12 bg-green-600 hover:bg-green-700 font-bold">
+              <Check className="h-5 w-5 mr-2" />
+              Aplicar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Editar Item */}
+      <Dialog open={modalEditarItem} onOpenChange={setModalEditarItem}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-primary flex items-center gap-2">
+              <Edit3 className="h-5 w-5" />
+              Editar Item
+            </DialogTitle>
+          </DialogHeader>
+          {editandoItem && (
+            <div className="space-y-4 py-4">
+              <p className="font-semibold">{editandoItem.nome}</p>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                  Preco Unitario (R$)
+                </label>
+                <Input
+                  placeholder="Ex: 25.00"
+                  value={novoPrecoItem}
+                  onChange={(e) => setNovoPrecoItem(e.target.value)}
+                  type="text"
+                  inputMode="decimal"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                  Quantidade
+                </label>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setNovaQuantidadeItem(Math.max(1, novaQuantidadeItem - 1))}
+                    className="w-10 h-10 rounded-full border border-border flex items-center justify-center"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </button>
+                  <span className="w-10 text-center text-xl font-bold">{novaQuantidadeItem}</span>
+                  <button
+                    onClick={() => setNovaQuantidadeItem(novaQuantidadeItem + 1)}
+                    className="w-10 h-10 rounded-full bg-primary flex items-center justify-center"
+                  >
+                    <Plus className="h-4 w-4 text-primary-foreground" />
+                  </button>
+                </div>
+              </div>
+              <Button onClick={salvarEdicaoItem} className="w-full h-12 bg-green-600 hover:bg-green-700 font-bold">
+                <Check className="h-5 w-5 mr-2" />
+                Salvar
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
