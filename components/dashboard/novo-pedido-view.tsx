@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search, Plus, Minus, User, Check, ArrowLeft, ArrowRight, Package, ShoppingBag, X, Loader2, Edit3, DollarSign } from "lucide-react"
+import { Search, Plus, Minus, User, Check, ArrowLeft, ArrowRight, Package, ShoppingBag, X, Loader2, Edit3, DollarSign, Truck } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -129,6 +129,13 @@ export function NovoPedidoView() {
   const [novoPrecoItem, setNovoPrecoItem] = useState("")
   const [novaQuantidadeItem, setNovaQuantidadeItem] = useState(1)
 
+  // Entrega
+  const [isEntrega, setIsEntrega] = useState(false)
+  const taxaEntrega = 5.00 // Taxa fixa de entrega
+
+  // Modo edicao de pedido existente
+  const [pedidoOriginalId, setPedidoOriginalId] = useState<string | null>(null)
+
   // Carregar dados do banco
   useEffect(() => {
     async function carregarDados() {
@@ -163,6 +170,38 @@ export function NovoPedidoView() {
       }
     }
     carregarDados()
+
+    // Verificar se esta editando um pedido existente
+    const params = new URLSearchParams(window.location.search)
+    if (params.get("editar") === "true") {
+      const pedidoSalvo = localStorage.getItem("pedido_para_editar")
+      if (pedidoSalvo) {
+        try {
+          const pedido = JSON.parse(pedidoSalvo)
+          setPedidoOriginalId(pedido.id)
+          setNomeCliente(pedido.cliente)
+          setIsEntrega(pedido.tipo === "entrega")
+          // Converter itens do pedido para o formato do carrinho
+          const itensConvertidos = (pedido.itens || []).map((item: any, index: number) => ({
+            id: `edit-${index}-${Date.now()}`,
+            produtoId: 0,
+            nome: item.nome || item.product_name || "Item",
+            preco: Number(item.preco || item.unit_price || 0),
+            quantidade: Number(item.quantidade || item.quantity || 1),
+            maionese: item.maionese,
+            extraMaioneses: item.extraMaioneses,
+            adicionais: item.adicionais,
+            acompanhamentos: item.acompanhamentos,
+            observacao: item.observacao,
+          }))
+          setItens(itensConvertidos)
+          setEtapa("cardapio")
+          localStorage.removeItem("pedido_para_editar")
+        } catch (e) {
+          console.error("Erro ao carregar pedido para edicao:", e)
+        }
+      }
+    }
   }, [])
 
   const produtosFiltrados = produtos.filter((p) => {
@@ -350,7 +389,8 @@ export function NovoPedidoView() {
   }
 
   const subtotal = itens.reduce((acc, item) => acc + calcularTotalItem(item), 0)
-  const total = subtotal - desconto
+  const totalComEntrega = subtotal + (isEntrega ? taxaEntrega : 0)
+  const total = totalComEntrega - desconto
   const totalItens = itens.reduce((acc, item) => acc + item.quantidade, 0)
 
   const irParaCardapio = () => {
@@ -378,7 +418,9 @@ export function NovoPedidoView() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           cliente: nomeCliente,
-          tipo: "balcao",
+          tipo: isEntrega ? "entrega" : "retirada",
+          taxaEntrega: isEntrega ? taxaEntrega : 0,
+          desconto: desconto,
           observacao: observacaoGeral,
           itens: itens.map((item) => ({
             nome: item.nome,
@@ -390,13 +432,16 @@ export function NovoPedidoView() {
             acompanhamentos: item.acompanhamentos,
             observacao: item.observacao,
           })),
+          // Se estiver editando, inclui o ID do pedido original para adicionar itens
+          pedidoOriginalId: pedidoOriginalId,
         }),
       })
       if (res.ok) {
-        toast.success("Pedido enviado com sucesso!")
+        toast.success(pedidoOriginalId ? "Itens adicionados ao pedido!" : "Pedido enviado com sucesso!")
         // Limpa o estado antes de redirecionar para evitar reenvio
         setItens([])
         setNomeCliente("")
+        setPedidoOriginalId(null)
         router.push("/dashboard")
       } else {
         toast.error("Erro ao enviar pedido")
@@ -418,12 +463,12 @@ export function NovoPedidoView() {
               <User className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
             </div>
             <h1 className="text-xl sm:text-2xl font-serif font-bold text-primary">Novo Pedido</h1>
-            <p className="text-sm text-muted-foreground">Digite o nome do cliente</p>
+            <p className="text-sm text-muted-foreground">Digite o nome do cliente ou numero da mesa</p>
           </div>
 
           <div className="space-y-3 sm:space-y-4">
             <Input
-              placeholder="Nome do cliente..."
+              placeholder="Nome do cliente ou Mesa 1, Mesa 2..."
               value={nomeCliente}
               onChange={(e) => setNomeCliente(e.target.value)}
               className="h-12 sm:h-14 text-base sm:text-lg text-center bg-card border-2 border-border focus:border-primary"
@@ -536,19 +581,57 @@ export function NovoPedidoView() {
               </div>
             )}
 
-            {/* Subtotal, Desconto e Total */}
+            {/* Opcao de Entrega */}
+            <div className="py-3 border-b border-border">
+              <button
+                onClick={() => setIsEntrega(!isEntrega)}
+                className={cn(
+                  "w-full flex items-center justify-between px-4 py-3 rounded-xl border-2 transition-all",
+                  isEntrega
+                    ? "border-green-500 bg-green-500/10"
+                    : "border-border hover:border-primary/50"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <Truck className={cn("h-5 w-5", isEntrega ? "text-green-500" : "text-muted-foreground")} />
+                  <span className={cn("font-medium", isEntrega && "text-green-500")}>Entrega</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={cn("text-sm", isEntrega ? "text-green-500" : "text-muted-foreground")}>
+                    + R$ {taxaEntrega.toFixed(2)}
+                  </span>
+                  <div className={cn(
+                    "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                    isEntrega ? "border-green-500 bg-green-500" : "border-muted-foreground"
+                  )}>
+                    {isEntrega && <Check className="h-3 w-3 text-white" />}
+                  </div>
+                </div>
+              </button>
+              {!isEntrega && (
+                <p className="text-xs text-muted-foreground mt-2 text-center">
+                  Nao selecionado = Retirada no balcao ou Mesa
+                </p>
+              )}
+            </div>
+
+            {/* Subtotal, Entrega, Desconto e Total */}
             <div className="mt-4 space-y-2">
+              <div className="flex items-center justify-between px-4">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="font-semibold">R$ {subtotal.toFixed(2)}</span>
+              </div>
+              {isEntrega && (
+                <div className="flex items-center justify-between px-4 text-green-500">
+                  <span>Taxa de Entrega</span>
+                  <span>+ R$ {taxaEntrega.toFixed(2)}</span>
+                </div>
+              )}
               {desconto > 0 && (
-                <>
-                  <div className="flex items-center justify-between px-4">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span className="font-semibold">R$ {subtotal.toFixed(2)}</span>
-                  </div>
-                  <div className="flex items-center justify-between px-4 text-red-500">
-                    <span>Desconto</span>
-                    <span>- R$ {desconto.toFixed(2)}</span>
-                  </div>
-                </>
+                <div className="flex items-center justify-between px-4 text-red-500">
+                  <span>Desconto</span>
+                  <span>- R$ {desconto.toFixed(2)}</span>
+                </div>
               )}
               <div className="flex items-center justify-between py-4 bg-primary/10 rounded-xl px-4">
                 <span className="text-lg font-semibold">Total</span>

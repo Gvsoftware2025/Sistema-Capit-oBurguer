@@ -17,6 +17,7 @@ import {
   Truck,
   Store,
   X,
+  Plus,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Pedido } from "@/lib/types"
@@ -26,6 +27,7 @@ interface PedidoDetalhesModalProps {
   aberto: boolean
   onFechar: () => void
   onImprimir?: (pedido: Pedido) => void
+  onAdicionarItens?: (pedido: Pedido) => void
 }
 
 export function PedidoDetalhesModal({
@@ -33,6 +35,7 @@ export function PedidoDetalhesModal({
   aberto,
   onFechar,
   onImprimir,
+  onAdicionarItens,
 }: PedidoDetalhesModalProps) {
   if (!pedido) return null
 
@@ -230,16 +233,27 @@ export function PedidoDetalhesModal({
             </span>
           </div>
 
-          {/* Botao Imprimir */}
-          {onImprimir && (
-            <Button
-              onClick={() => onImprimir(pedido)}
-              className="w-full h-12 bg-zinc-700 hover:bg-zinc-600 text-white font-bold"
-            >
-              <Printer className="h-5 w-5 mr-2" />
-              Imprimir Pedido
-            </Button>
-          )}
+          {/* Botoes */}
+          <div className="space-y-2">
+            {onAdicionarItens && (
+              <Button
+                onClick={() => onAdicionarItens(pedido)}
+                className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                Adicionar Itens
+              </Button>
+            )}
+            {onImprimir && (
+              <Button
+                onClick={() => onImprimir(pedido)}
+                className="w-full h-12 bg-zinc-700 hover:bg-zinc-600 text-white font-bold"
+              >
+                <Printer className="h-5 w-5 mr-2" />
+                Imprimir Pedido
+              </Button>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

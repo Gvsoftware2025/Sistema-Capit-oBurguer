@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
+import { useRouter } from "next/navigation"
 import useSWR from "swr"
 import { Header } from "./header"
 import { FiltrosPedidos } from "./filtros-pedidos"
@@ -16,6 +17,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json()).then((data
 type StatusFiltro = "todos" | "novo" | "preparando" | "pronto"
 
 export function DashboardView() {
+  const router = useRouter()
   const [somAtivado, setSomAtivado] = useState(true)
   const [filtroAtivo, setFiltroAtivo] = useState<StatusFiltro>("todos")
   const [ordenacao, setOrdenacao] = useState("recentes")
@@ -119,6 +121,14 @@ export function DashboardView() {
     mutate()
   }
 
+  const adicionarItensAoPedido = (pedido: Pedido) => {
+    // Redireciona para o novo-pedido com os dados do pedido existente
+    // Salva o pedido no localStorage para recuperar na pagina de novo pedido
+    localStorage.setItem("pedido_para_editar", JSON.stringify(pedido))
+    setModalAberto(false)
+    router.push("/dashboard/novo-pedido?editar=true")
+  }
+
   const pedidosAtivos = pedidos.filter((p) => p.status !== "finalizado")
   const pedidosFiltrados =
     filtroAtivo === "todos"
@@ -173,6 +183,7 @@ export function DashboardView() {
         aberto={modalAberto}
         onFechar={fecharModal}
         onImprimir={imprimirPedido}
+        onAdicionarItens={adicionarItensAoPedido}
       />
 
       <StatsBar
