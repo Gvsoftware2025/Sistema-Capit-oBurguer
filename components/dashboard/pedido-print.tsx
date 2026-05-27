@@ -306,9 +306,10 @@ export function imprimirPedido(pedido: Pedido) {
       ${pedido.itens.map((item) => `
         <div class="item">
           <div class="item-row">
-            <span>${item.quantidade}x ${item.nome}${item.variacao ? ` (${item.variacao})` : ""}</span>
+            <span>${item.quantidade}x ${item.nome}</span>
             <span>R$${(item.preco * item.quantidade).toFixed(2)}</span>
           </div>
+          ${item.variacao ? `<div class="item-detail">(${item.variacao})</div>` : ""}
           ${item.acompanhamentos ? `<div class="item-special">* ${item.acompanhamentos}</div>` : ""}
           ${item.maionese ? `<div class="item-detail">Maionese: ${item.maionese}</div>` : ""}
           ${item.extraMaioneses && item.extraMaioneses.length > 0 ? 
