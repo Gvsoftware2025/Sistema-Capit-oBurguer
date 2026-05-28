@@ -1005,7 +1005,7 @@ export function NovoPedidoView() {
             {/* Maionese Gratis - Só mostra para HAMBURGUERES */}
             {maioneses.length > 0 && (() => {
               const cat = categorias.find(c => c.id === produtoSelecionado?.category_id)
-              const isHamburguer = cat?.name?.toLowerCase().includes("hamburguer") || cat?.name?.toLowerCase().includes("lanche") || cat?.name?.toLowerCase().includes("burger")
+              const isHamburguer = cat?.name?.toLowerCase().includes("hamburguer") || cat?.name?.toLowerCase().includes("lanche") || cat?.name?.toLowerCase().includes("burger") || cat?.name?.toLowerCase().includes("burguer")
               return isHamburguer
             })() && (
               <div>
@@ -1035,7 +1035,7 @@ export function NovoPedidoView() {
             {/* Maioneses Extras - Só mostra para HAMBURGUERES */}
             {maioneses.length > 0 && (() => {
               const cat = categorias.find(c => c.id === produtoSelecionado?.category_id)
-              const isHamburguer = cat?.name?.toLowerCase().includes("hamburguer") || cat?.name?.toLowerCase().includes("lanche") || cat?.name?.toLowerCase().includes("burger")
+              const isHamburguer = cat?.name?.toLowerCase().includes("hamburguer") || cat?.name?.toLowerCase().includes("lanche") || cat?.name?.toLowerCase().includes("burger") || cat?.name?.toLowerCase().includes("burguer")
               return isHamburguer
             })() && (
               <div>
@@ -1071,7 +1071,7 @@ export function NovoPedidoView() {
             {/* Adicionais - Só mostra para HAMBURGUERES */}
             {adicionais.length > 0 && (() => {
               const cat = categorias.find(c => c.id === produtoSelecionado?.category_id)
-              const isHamburguer = cat?.name?.toLowerCase().includes("hamburguer") || cat?.name?.toLowerCase().includes("lanche") || cat?.name?.toLowerCase().includes("burger")
+              const isHamburguer = cat?.name?.toLowerCase().includes("hamburguer") || cat?.name?.toLowerCase().includes("lanche") || cat?.name?.toLowerCase().includes("burger") || cat?.name?.toLowerCase().includes("burguer")
               return isHamburguer
             })() && (
               <div>
