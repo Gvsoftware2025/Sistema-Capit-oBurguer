@@ -135,7 +135,7 @@ export function NovoPedidoView() {
   const taxaEntrega = 2.00 // Taxa fixa de entrega
 
   // Pagamento
-  const [formaPagamento, setFormaPagamento] = useState<"dinheiro" | "pix" | "cartao_credito" | "cartao_debito">("dinheiro")
+  const [formaPagamento, setFormaPagamento] = useState<"dinheiro" | "pix" | "cartao">("dinheiro")
   const [valorPago, setValorPago] = useState("")
 
   // Modo edicao de pedido existente
@@ -638,12 +638,11 @@ export function NovoPedidoView() {
               <label className="text-sm font-medium text-muted-foreground mb-3 block">
                 Forma de Pagamento
               </label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {[
                   { value: "dinheiro", label: "Dinheiro", icon: Banknote },
                   { value: "pix", label: "PIX", icon: QrCode },
-                  { value: "cartao_credito", label: "Credito", icon: CreditCard },
-                  { value: "cartao_debito", label: "Debito", icon: CreditCard },
+                  { value: "cartao", label: "Cartao", icon: CreditCard },
                 ].map((p) => (
                   <button
                     key={p.value}
@@ -1003,8 +1002,12 @@ export function NovoPedidoView() {
               </div>
             </div>
 
-            {/* Maionese Gratis - Só mostra se NAO tiver variacoes (lanches sim, batata nao) */}
-            {maioneses.length > 0 && productVariations.length === 0 && (
+            {/* Maionese Gratis - Só mostra para HAMBURGUERES */}
+            {maioneses.length > 0 && (() => {
+              const cat = categorias.find(c => c.id === produtoSelecionado?.category_id)
+              const isHamburguer = cat?.name?.toLowerCase().includes("hamburguer") || cat?.name?.toLowerCase().includes("lanche") || cat?.name?.toLowerCase().includes("burger")
+              return isHamburguer
+            })() && (
               <div>
                 <label className="text-sm font-medium text-muted-foreground mb-2 block">
                   Escolha sua Maionese <span className="text-green-500">(Gratis)</span>
@@ -1029,8 +1032,12 @@ export function NovoPedidoView() {
               </div>
             )}
 
-            {/* Maioneses Extras - Só mostra se NAO tiver variacoes */}
-            {maioneses.length > 0 && productVariations.length === 0 && (
+            {/* Maioneses Extras - Só mostra para HAMBURGUERES */}
+            {maioneses.length > 0 && (() => {
+              const cat = categorias.find(c => c.id === produtoSelecionado?.category_id)
+              const isHamburguer = cat?.name?.toLowerCase().includes("hamburguer") || cat?.name?.toLowerCase().includes("lanche") || cat?.name?.toLowerCase().includes("burger")
+              return isHamburguer
+            })() && (
               <div>
                 <label className="text-sm font-medium text-muted-foreground mb-2 block">
                   Maioneses Extras <span className="text-blue-400">(+R$ 2,00 cada)</span>
@@ -1061,8 +1068,12 @@ export function NovoPedidoView() {
               </div>
             )}
 
-            {/* Adicionais - Só mostra se NAO tiver variacoes */}
-            {adicionais.length > 0 && productVariations.length === 0 && (
+            {/* Adicionais - Só mostra para HAMBURGUERES */}
+            {adicionais.length > 0 && (() => {
+              const cat = categorias.find(c => c.id === produtoSelecionado?.category_id)
+              const isHamburguer = cat?.name?.toLowerCase().includes("hamburguer") || cat?.name?.toLowerCase().includes("lanche") || cat?.name?.toLowerCase().includes("burger")
+              return isHamburguer
+            })() && (
               <div>
                 <label className="text-sm font-medium text-muted-foreground mb-2 block">
                   Adicionais <span className="text-amber-500">(Opcional)</span>
