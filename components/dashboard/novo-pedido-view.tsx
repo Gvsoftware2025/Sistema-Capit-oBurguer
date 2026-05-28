@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search, Plus, Minus, User, Check, ArrowLeft, ArrowRight, Package, ShoppingBag, X, Loader2, Edit3, DollarSign, Truck } from "lucide-react"
+import { Search, Plus, Minus, User, Check, ArrowLeft, ArrowRight, Package, ShoppingBag, X, Loader2, Edit3, DollarSign, Truck, CreditCard, Banknote, QrCode } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -131,7 +131,12 @@ export function NovoPedidoView() {
 
   // Entrega
   const [isEntrega, setIsEntrega] = useState(false)
-  const taxaEntrega = 5.00 // Taxa fixa de entrega
+  const [enderecoEntrega, setEnderecoEntrega] = useState("")
+  const taxaEntrega = 2.00 // Taxa fixa de entrega
+
+  // Pagamento
+  const [formaPagamento, setFormaPagamento] = useState<"dinheiro" | "pix" | "cartao_credito" | "cartao_debito">("dinheiro")
+  const [valorPago, setValorPago] = useState("")
 
   // Modo edicao de pedido existente
   const [pedidoOriginalId, setPedidoOriginalId] = useState<string | null>(null)
@@ -419,8 +424,11 @@ export function NovoPedidoView() {
         body: JSON.stringify({
           cliente: nomeCliente,
           tipo: isEntrega ? "entrega" : "retirada",
+          endereco: isEntrega ? enderecoEntrega : undefined,
           taxaEntrega: isEntrega ? taxaEntrega : 0,
           desconto: desconto,
+          pagamento: formaPagamento,
+          valorPago: formaPagamento === "dinheiro" ? parseFloat(valorPago) || 0 : 0,
           observacao: observacaoGeral,
           itens: itens.map((item) => ({
             nome: item.nome,
@@ -608,10 +616,93 @@ export function NovoPedidoView() {
                   </div>
                 </div>
               </button>
+              {isEntrega && (
+                <div className="mt-3">
+                  <Input
+                    placeholder="Endereco: Rua, numero, bairro"
+                    value={enderecoEntrega}
+                    onChange={(e) => setEnderecoEntrega(e.target.value)}
+                    className="bg-input/40"
+                  />
+                </div>
+              )}
               {!isEntrega && (
                 <p className="text-xs text-muted-foreground mt-2 text-center">
                   Nao selecionado = Retirada no balcao ou Mesa
                 </p>
+              )}
+            </div>
+
+            {/* Forma de Pagamento */}
+            <div className="py-3 border-b border-border">
+              <label className="text-sm font-medium text-muted-foreground mb-3 block">
+                Forma de Pagamento
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { value: "dinheiro", label: "Dinheiro", icon: Banknote },
+                  { value: "pix", label: "PIX", icon: QrCode },
+                  { value: "cartao_credito", label: "Credito", icon: CreditCard },
+                  { value: "cartao_debito", label: "Debito", icon: CreditCard },
+                ].map((p) => (
+                  <button
+                    key={p.value}
+                    onClick={() => setFormaPagamento(p.value as typeof formaPagamento)}
+                    className={cn(
+                      "flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border-2 transition-all text-sm",
+                      formaPagamento === p.value
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border hover:border-primary/50"
+                    )}
+                  >
+                    <p.icon className="h-4 w-4" />
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+              
+              {/* Campo de troco para dinheiro */}
+              {formaPagamento === "dinheiro" && (
+                <div className="mt-3">
+                  <label className="text-xs text-muted-foreground mb-1 block">
+                    Troco para quanto? (deixe vazio se nao precisar)
+                  </label>
+                  <Input
+                    type="number"
+                    placeholder="Ex: 100"
+                    value={valorPago}
+                    onChange={(e) => setValorPago(e.target.value)}
+                    className="bg-input/40"
+                  />
+                  {valorPago && (
+                    <div className="mt-2">
+                      {(() => {
+                        const pago = parseFloat(valorPago) || 0
+                        const diferenca = pago - total
+                        if (pago === 0) return null
+                        if (diferenca > 0) {
+                          return (
+                            <p className="text-sm font-bold text-amber-500">
+                              Troco: R$ {diferenca.toFixed(2)}
+                            </p>
+                          )
+                        } else if (diferenca < 0) {
+                          return (
+                            <p className="text-sm font-bold text-red-500">
+                              Falta: R$ {Math.abs(diferenca).toFixed(2)}
+                            </p>
+                          )
+                        } else {
+                          return (
+                            <p className="text-sm font-bold text-green-500">
+                              Valor exato - Sem troco
+                            </p>
+                          )
+                        }
+                      })()}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 

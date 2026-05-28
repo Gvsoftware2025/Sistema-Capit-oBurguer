@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { Search, Plus, Pencil, Trash2, ImageIcon } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Search, Plus, Pencil, Trash2, Loader2, Eye, EyeOff } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -10,7 +10,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -21,87 +20,333 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
-import { PRODUTOS as produtosIniciais, CATEGORIAS } from "@/lib/produtos"
-import type { Produto } from "@/lib/types"
 import { toast } from "sonner"
-import Image from "next/image"
+import useSWR from "swr"
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json())
+
+type Categoria = {
+  id: number
+  name: string
+  display_order: number
+}
+
+type Produto = {
+  id: number
+  name: string
+  description: string | null
+  price: number
+  category_id: number
+  image_url: string | null
+  is_available: boolean
+}
+
+type Maionese = {
+  id: number
+  name: string
+  price: number
+  is_available: boolean
+}
+
+type Adicional = {
+  id: number
+  name: string
+  price: number
+  is_available: boolean
+}
 
 export function CardapioGestaoView() {
-  const [produtos, setProdutos] = useState<Produto[]>(produtosIniciais)
   const [busca, setBusca] = useState("")
-  const [categoriaAtiva, setCategoriaAtiva] = useState<string | null>(null)
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [editando, setEditando] = useState<Produto | null>(null)
+  const [categoriaAtiva, setCategoriaAtiva] = useState<number | null>(null)
+  const [tabAtiva, setTabAtiva] = useState("produtos")
+  
+  // Dialog states
+  const [dialogProduto, setDialogProduto] = useState(false)
+  const [dialogMaionese, setDialogMaionese] = useState(false)
+  const [dialogAdicional, setDialogAdicional] = useState(false)
+  const [editandoProduto, setEditandoProduto] = useState<Produto | null>(null)
+  const [editandoMaionese, setEditandoMaionese] = useState<Maionese | null>(null)
+  const [editandoAdicional, setEditandoAdicional] = useState<Adicional | null>(null)
+  const [salvando, setSalvando] = useState(false)
 
-  // Form state
+  // Form states
   const [formNome, setFormNome] = useState("")
   const [formDescricao, setFormDescricao] = useState("")
   const [formPreco, setFormPreco] = useState("")
   const [formCategoria, setFormCategoria] = useState("")
 
+  // Fetch data from API
+  const { data: categoriasData, mutate: mutateCategorias } = useSWR("/api/cardapio/categorias", fetcher)
+  const { data: produtosData, mutate: mutateProdutos } = useSWR("/api/cardapio/produtos", fetcher)
+  const { data: maionesesData, mutate: mutateMaioneses } = useSWR("/api/cardapio/maioneses", fetcher)
+  const { data: adicionaisData, mutate: mutateAdicionais } = useSWR("/api/cardapio/adicionais", fetcher)
+
+  const categorias: Categoria[] = categoriasData?.categorias || []
+  const produtos: Produto[] = produtosData?.produtos || []
+  const maioneses: Maionese[] = maionesesData?.maioneses || []
+  const adicionais: Adicional[] = adicionaisData?.adicionais || []
+
   const produtosFiltrados = produtos.filter((p) => {
-    const matchCategoria = !categoriaAtiva || p.categoria === categoriaAtiva
-    const matchBusca = !busca || p.nome.toLowerCase().includes(busca.toLowerCase())
+    const matchCategoria = !categoriaAtiva || p.category_id === categoriaAtiva
+    const matchBusca = !busca || p.name.toLowerCase().includes(busca.toLowerCase())
     return matchCategoria && matchBusca
   })
 
-  const abrirDialog = (produto?: Produto) => {
+  // Produto functions
+  const abrirDialogProduto = (produto?: Produto) => {
     if (produto) {
-      setEditando(produto)
-      setFormNome(produto.nome)
-      setFormDescricao(produto.descricao)
-      setFormPreco(produto.preco.toString())
-      setFormCategoria(produto.categoria)
+      setEditandoProduto(produto)
+      setFormNome(produto.name)
+      setFormDescricao(produto.description || "")
+      setFormPreco(produto.price.toString())
+      setFormCategoria(produto.category_id.toString())
     } else {
-      setEditando(null)
+      setEditandoProduto(null)
       setFormNome("")
       setFormDescricao("")
       setFormPreco("")
-      setFormCategoria("")
+      setFormCategoria(categorias[0]?.id.toString() || "")
     }
-    setDialogOpen(true)
+    setDialogProduto(true)
   }
 
-  const salvarProduto = () => {
+  const salvarProduto = async () => {
     if (!formNome || !formPreco || !formCategoria) {
       toast.error("Preencha todos os campos obrigatórios")
       return
     }
-
-    if (editando) {
-      setProdutos((prev) =>
-        prev.map((p) =>
-          p.id === editando.id
-            ? { ...p, nome: formNome, descricao: formDescricao, preco: parseFloat(formPreco), categoria: formCategoria }
-            : p
-        )
-      )
-      toast.success("Produto atualizado!")
-    } else {
-      const novoProduto: Produto = {
-        id: `prod-${Date.now()}`,
-        nome: formNome,
-        descricao: formDescricao,
-        preco: parseFloat(formPreco),
-        categoria: formCategoria,
-        disponivel: true,
+    setSalvando(true)
+    try {
+      if (editandoProduto) {
+        await fetch(`/api/cardapio/produtos/${editandoProduto.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: formNome,
+            description: formDescricao || null,
+            price: parseFloat(formPreco),
+            category_id: parseInt(formCategoria),
+            is_available: editandoProduto.is_available,
+          }),
+        })
+        toast.success("Produto atualizado!")
+      } else {
+        await fetch("/api/cardapio/produtos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: formNome,
+            description: formDescricao || null,
+            price: parseFloat(formPreco),
+            category_id: parseInt(formCategoria),
+          }),
+        })
+        toast.success("Produto adicionado!")
       }
-      setProdutos((prev) => [...prev, novoProduto])
-      toast.success("Produto adicionado!")
+      mutateProdutos()
+      setDialogProduto(false)
+    } catch {
+      toast.error("Erro ao salvar produto")
+    } finally {
+      setSalvando(false)
     }
-
-    setDialogOpen(false)
   }
 
-  const excluirProduto = (id: string) => {
-    setProdutos((prev) => prev.filter((p) => p.id !== id))
-    toast.success("Produto excluído!")
+  const toggleDisponibilidadeProduto = async (produto: Produto) => {
+    try {
+      await fetch(`/api/cardapio/produtos/${produto.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...produto,
+          is_available: !produto.is_available,
+        }),
+      })
+      mutateProdutos()
+      toast.success(produto.is_available ? "Produto desativado" : "Produto ativado")
+    } catch {
+      toast.error("Erro ao atualizar disponibilidade")
+    }
   }
 
-  const toggleDisponibilidade = (id: string) => {
-    setProdutos((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, disponivel: !p.disponivel } : p))
+  const excluirProduto = async (id: number) => {
+    if (!confirm("Tem certeza que deseja excluir este produto?")) return
+    try {
+      await fetch(`/api/cardapio/produtos/${id}`, { method: "DELETE" })
+      mutateProdutos()
+      toast.success("Produto excluído!")
+    } catch {
+      toast.error("Erro ao excluir produto")
+    }
+  }
+
+  // Maionese functions
+  const abrirDialogMaionese = (maionese?: Maionese) => {
+    if (maionese) {
+      setEditandoMaionese(maionese)
+      setFormNome(maionese.name)
+      setFormPreco(maionese.price.toString())
+    } else {
+      setEditandoMaionese(null)
+      setFormNome("")
+      setFormPreco("0")
+    }
+    setDialogMaionese(true)
+  }
+
+  const salvarMaionese = async () => {
+    if (!formNome) {
+      toast.error("Preencha o nome")
+      return
+    }
+    setSalvando(true)
+    try {
+      if (editandoMaionese) {
+        await fetch(`/api/cardapio/maioneses/${editandoMaionese.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: formNome,
+            price: parseFloat(formPreco) || 0,
+            is_available: editandoMaionese.is_available,
+          }),
+        })
+        toast.success("Maionese atualizada!")
+      } else {
+        await fetch("/api/cardapio/maioneses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: formNome,
+            price: parseFloat(formPreco) || 0,
+          }),
+        })
+        toast.success("Maionese adicionada!")
+      }
+      mutateMaioneses()
+      setDialogMaionese(false)
+    } catch {
+      toast.error("Erro ao salvar maionese")
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  const toggleDisponibilidadeMaionese = async (maionese: Maionese) => {
+    try {
+      await fetch(`/api/cardapio/maioneses/${maionese.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...maionese,
+          is_available: !maionese.is_available,
+        }),
+      })
+      mutateMaioneses()
+      toast.success(maionese.is_available ? "Maionese desativada" : "Maionese ativada")
+    } catch {
+      toast.error("Erro ao atualizar disponibilidade")
+    }
+  }
+
+  const excluirMaionese = async (id: number) => {
+    if (!confirm("Tem certeza que deseja excluir esta maionese?")) return
+    try {
+      await fetch(`/api/cardapio/maioneses/${id}`, { method: "DELETE" })
+      mutateMaioneses()
+      toast.success("Maionese excluída!")
+    } catch {
+      toast.error("Erro ao excluir maionese")
+    }
+  }
+
+  // Adicional functions
+  const abrirDialogAdicional = (adicional?: Adicional) => {
+    if (adicional) {
+      setEditandoAdicional(adicional)
+      setFormNome(adicional.name)
+      setFormPreco(adicional.price.toString())
+    } else {
+      setEditandoAdicional(null)
+      setFormNome("")
+      setFormPreco("")
+    }
+    setDialogAdicional(true)
+  }
+
+  const salvarAdicional = async () => {
+    if (!formNome || !formPreco) {
+      toast.error("Preencha todos os campos")
+      return
+    }
+    setSalvando(true)
+    try {
+      if (editandoAdicional) {
+        await fetch(`/api/cardapio/adicionais/${editandoAdicional.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: formNome,
+            price: parseFloat(formPreco),
+            is_available: editandoAdicional.is_available,
+          }),
+        })
+        toast.success("Adicional atualizado!")
+      } else {
+        await fetch("/api/cardapio/adicionais", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: formNome,
+            price: parseFloat(formPreco),
+          }),
+        })
+        toast.success("Adicional adicionado!")
+      }
+      mutateAdicionais()
+      setDialogAdicional(false)
+    } catch {
+      toast.error("Erro ao salvar adicional")
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  const toggleDisponibilidadeAdicional = async (adicional: Adicional) => {
+    try {
+      await fetch(`/api/cardapio/adicionais/${adicional.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...adicional,
+          is_available: !adicional.is_available,
+        }),
+      })
+      mutateAdicionais()
+      toast.success(adicional.is_available ? "Adicional desativado" : "Adicional ativado")
+    } catch {
+      toast.error("Erro ao atualizar disponibilidade")
+    }
+  }
+
+  const excluirAdicional = async (id: number) => {
+    if (!confirm("Tem certeza que deseja excluir este adicional?")) return
+    try {
+      await fetch(`/api/cardapio/adicionais/${id}`, { method: "DELETE" })
+      mutateAdicionais()
+      toast.success("Adicional excluído!")
+    } catch {
+      toast.error("Erro ao excluir adicional")
+    }
+  }
+
+  if (!produtosData) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     )
   }
 
@@ -109,196 +354,308 @@ export function CardapioGestaoView() {
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="p-4 lg:p-6 border-b border-border">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-          <h1 className="text-2xl font-serif font-bold text-primary">
-            Gestão do Cardápio
-          </h1>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => abrirDialog()} className="gap-2">
+        <h1 className="text-2xl font-serif font-bold text-primary mb-4">
+          Gestão do Cardápio
+        </h1>
+
+        <Tabs value={tabAtiva} onValueChange={setTabAtiva}>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="produtos">Produtos ({produtos.length})</TabsTrigger>
+            <TabsTrigger value="maioneses">Maioneses ({maioneses.length})</TabsTrigger>
+            <TabsTrigger value="adicionais">Adicionais ({adicionais.length})</TabsTrigger>
+          </TabsList>
+
+          {/* PRODUTOS */}
+          <TabsContent value="produtos" className="mt-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+              <div className="relative flex-1 w-full">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar produto..."
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Button onClick={() => abrirDialogProduto()} className="gap-2 shrink-0">
                 <Plus className="h-4 w-4" />
                 Novo Produto
               </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>
-                  {editando ? "Editar Produto" : "Novo Produto"}
-                </DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label>Nome *</Label>
-                  <Input
-                    value={formNome}
-                    onChange={(e) => setFormNome(e.target.value)}
-                    placeholder="Ex: Capitão Cheddar"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Descrição</Label>
-                  <Textarea
-                    value={formDescricao}
-                    onChange={(e) => setFormDescricao(e.target.value)}
-                    placeholder="Descrição do produto..."
-                    rows={3}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Preço *</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={formPreco}
-                      onChange={(e) => setFormPreco(e.target.value)}
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Categoria *</Label>
-                    <Select value={formCategoria} onValueChange={setFormCategoria}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CATEGORIAS.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            {cat.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <Button onClick={salvarProduto} className="w-full">
-                  {editando ? "Salvar Alterações" : "Adicionar Produto"}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+            </div>
 
-        {/* Busca e filtros */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar produto..."
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </div>
-
-        {/* Categorias */}
-        <div className="flex flex-wrap gap-2 mt-4">
-          <button
-            onClick={() => setCategoriaAtiva(null)}
-            className={cn(
-              "px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
-              !categoriaAtiva
-                ? "bg-primary text-primary-foreground"
-                : "bg-card border border-border hover:border-primary/50"
-            )}
-          >
-            Todos ({produtos.length})
-          </button>
-            {CATEGORIAS.map((cat) => {
-            const count = produtos.filter((p) => p.categoria === cat.id).length
-            return (
+            {/* Categorias */}
+            <div className="flex flex-wrap gap-2 mb-4">
               <button
-                key={cat.id}
-                onClick={() => setCategoriaAtiva(cat.id)}
+                onClick={() => setCategoriaAtiva(null)}
                 className={cn(
                   "px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
-                  categoriaAtiva === cat.id
+                  !categoriaAtiva
                     ? "bg-primary text-primary-foreground"
                     : "bg-card border border-border hover:border-primary/50"
                 )}
               >
-                {cat.label} ({count})
+                Todos
               </button>
-            )
-          })}
-        </div>
+              {categorias.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setCategoriaAtiva(cat.id)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
+                    categoriaAtiva === cat.id
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-card border border-border hover:border-primary/50"
+                  )}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+          </TabsContent>
+
+          {/* MAIONESES */}
+          <TabsContent value="maioneses" className="mt-4">
+            <div className="flex justify-end mb-4">
+              <Button onClick={() => abrirDialogMaionese()} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Nova Maionese
+              </Button>
+            </div>
+          </TabsContent>
+
+          {/* ADICIONAIS */}
+          <TabsContent value="adicionais" className="mt-4">
+            <div className="flex justify-end mb-4">
+              <Button onClick={() => abrirDialogAdicional()} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Novo Adicional
+              </Button>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
 
-      {/* Grid */}
+      {/* Lista */}
       <div className="flex-1 overflow-auto p-4 lg:p-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {produtosFiltrados.map((produto) => (
-            <div
-              key={produto.id}
-              className={cn(
-                "rounded-xl border bg-card overflow-hidden transition-all",
-                !produto.disponivel && "opacity-60"
-              )}
-            >
-              {/* Imagem */}
-              <div className="relative aspect-video bg-muted">
-                {produto.imagem ? (
-                  <Image
-                    src={produto.imagem}
-                    alt={produto.nome}
-                    fill
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <ImageIcon className="h-12 w-12 text-muted-foreground" />
-                  </div>
+        {tabAtiva === "produtos" && (
+          <div className="grid gap-3">
+            {produtosFiltrados.map((produto) => (
+              <div
+                key={produto.id}
+                className={cn(
+                  "flex items-center justify-between p-4 rounded-xl border-2 transition-all",
+                  produto.is_available
+                    ? "bg-card border-border"
+                    : "bg-card/50 border-red-500/30 opacity-60"
                 )}
-                <div className="absolute top-2 left-2">
-                  <Badge variant={produto.disponivel ? "default" : "secondary"}>
-                    {produto.disponivel ? "Disponível" : "Indisponível"}
-                  </Badge>
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold truncate">{produto.name}</h3>
+                    {!produto.is_available && (
+                      <Badge variant="destructive" className="text-xs">Indisponível</Badge>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground truncate">
+                    {categorias.find(c => c.id === produto.category_id)?.name}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-primary">R$ {Number(produto.price).toFixed(2)}</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => toggleDisponibilidadeProduto(produto)}
+                    title={produto.is_available ? "Desativar" : "Ativar"}
+                  >
+                    {produto.is_available ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4 text-red-500" />}
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => abrirDialogProduto(produto)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => excluirProduto(produto.id)}>
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                  </Button>
                 </div>
               </div>
+            ))}
+          </div>
+        )}
 
-              {/* Info */}
-              <div className="p-4">
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <h3 className="font-bold line-clamp-1">{produto.nome}</h3>
-                  <span className="font-bold text-primary whitespace-nowrap">
-                    R$ {produto.preco.toFixed(2)}
-                  </span>
+        {tabAtiva === "maioneses" && (
+          <div className="grid gap-3">
+            {maioneses.map((maionese) => (
+              <div
+                key={maionese.id}
+                className={cn(
+                  "flex items-center justify-between p-4 rounded-xl border-2 transition-all",
+                  maionese.is_available
+                    ? "bg-card border-border"
+                    : "bg-card/50 border-red-500/30 opacity-60"
+                )}
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold">{maionese.name}</h3>
+                    {!maionese.is_available && (
+                      <Badge variant="destructive" className="text-xs">Indisponível</Badge>
+                    )}
+                  </div>
                 </div>
-                <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                  {produto.descricao || "Sem descrição"}
-                </p>
                 <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    {Number(maionese.price) > 0 ? `R$ ${Number(maionese.price).toFixed(2)}` : "Grátis"}
+                  </span>
                   <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => abrirDialog(produto)}
-                  >
-                    <Pencil className="h-3 w-3 mr-1" />
-                    Editar
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => toggleDisponibilidade(produto.id)}
-                  >
-                    {produto.disponivel ? "Desativar" : "Ativar"}
-                  </Button>
-                  <Button
+                    variant="ghost"
                     size="icon"
-                    variant="destructive"
-                    className="h-8 w-8"
-                    onClick={() => excluirProduto(produto.id)}
+                    onClick={() => toggleDisponibilidadeMaionese(maionese)}
+                    title={maionese.is_available ? "Desativar" : "Ativar"}
                   >
-                    <Trash2 className="h-3 w-3" />
+                    {maionese.is_available ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4 text-red-500" />}
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => abrirDialogMaionese(maionese)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => excluirMaionese(maionese.id)}>
+                    <Trash2 className="h-4 w-4 text-red-500" />
                   </Button>
                 </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {tabAtiva === "adicionais" && (
+          <div className="grid gap-3">
+            {adicionais.map((adicional) => (
+              <div
+                key={adicional.id}
+                className={cn(
+                  "flex items-center justify-between p-4 rounded-xl border-2 transition-all",
+                  adicional.is_available
+                    ? "bg-card border-border"
+                    : "bg-card/50 border-red-500/30 opacity-60"
+                )}
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold">{adicional.name}</h3>
+                    {!adicional.is_available && (
+                      <Badge variant="destructive" className="text-xs">Indisponível</Badge>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-primary">R$ {Number(adicional.price).toFixed(2)}</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => toggleDisponibilidadeAdicional(adicional)}
+                    title={adicional.is_available ? "Desativar" : "Ativar"}
+                  >
+                    {adicional.is_available ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4 text-red-500" />}
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => abrirDialogAdicional(adicional)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => excluirAdicional(adicional.id)}>
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Dialog Produto */}
+      <Dialog open={dialogProduto} onOpenChange={setDialogProduto}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editandoProduto ? "Editar Produto" : "Novo Produto"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome *</Label>
+              <Input value={formNome} onChange={(e) => setFormNome(e.target.value)} placeholder="Ex: Capitão Cheddar" />
+            </div>
+            <div className="space-y-2">
+              <Label>Descrição</Label>
+              <Textarea value={formDescricao} onChange={(e) => setFormDescricao(e.target.value)} placeholder="Descrição do produto..." rows={3} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Preço *</Label>
+                <Input type="number" step="0.01" value={formPreco} onChange={(e) => setFormPreco(e.target.value)} placeholder="0.00" />
+              </div>
+              <div className="space-y-2">
+                <Label>Categoria *</Label>
+                <Select value={formCategoria} onValueChange={setFormCategoria}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categorias.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
+            <Button onClick={salvarProduto} className="w-full" disabled={salvando}>
+              {salvando ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {editandoProduto ? "Salvar Alterações" : "Adicionar Produto"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Maionese */}
+      <Dialog open={dialogMaionese} onOpenChange={setDialogMaionese}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editandoMaionese ? "Editar Maionese" : "Nova Maionese"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome *</Label>
+              <Input value={formNome} onChange={(e) => setFormNome(e.target.value)} placeholder="Ex: Maionese de Bacon" />
+            </div>
+            <div className="space-y-2">
+              <Label>Preço (0 = Grátis)</Label>
+              <Input type="number" step="0.01" value={formPreco} onChange={(e) => setFormPreco(e.target.value)} placeholder="0.00" />
+            </div>
+            <Button onClick={salvarMaionese} className="w-full" disabled={salvando}>
+              {salvando ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {editandoMaionese ? "Salvar Alterações" : "Adicionar Maionese"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Adicional */}
+      <Dialog open={dialogAdicional} onOpenChange={setDialogAdicional}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editandoAdicional ? "Editar Adicional" : "Novo Adicional"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome *</Label>
+              <Input value={formNome} onChange={(e) => setFormNome(e.target.value)} placeholder="Ex: Bacon" />
+            </div>
+            <div className="space-y-2">
+              <Label>Preço *</Label>
+              <Input type="number" step="0.01" value={formPreco} onChange={(e) => setFormPreco(e.target.value)} placeholder="0.00" />
+            </div>
+            <Button onClick={salvarAdicional} className="w-full" disabled={salvando}>
+              {salvando ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {editandoAdicional ? "Salvar Alterações" : "Adicionar Adicional"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

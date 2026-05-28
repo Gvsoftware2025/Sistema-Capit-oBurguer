@@ -144,10 +144,12 @@ export async function POST(request: Request) {
     const endereco = String(body.endereco ?? body.customer_address ?? body.address ?? "").trim()
     const tipo = (body.tipo === "entrega" || body.delivery_type === "entregar") ? "entregar" : "retirar"
     const pagamento = body.pagamento || body.payment_method || "dinheiro"
-    const troco = body.troco !== undefined ? Number(body.troco) : (body.change_for !== undefined ? Number(body.change_for) : null)
+    const troco = body.valorPago !== undefined ? Number(body.valorPago) : (body.troco !== undefined ? Number(body.troco) : (body.change_for !== undefined ? Number(body.change_for) : null))
     const observacao = String(body.observacao ?? body.notes ?? "").trim()
+    const taxaEntregaValor = body.taxaEntrega !== undefined ? Number(body.taxaEntrega) : 0
+    const descontoValor = body.desconto !== undefined ? Number(body.desconto) : 0
     
-    console.log("[v0] Pedido recebido - pagamento:", pagamento, "troco:", troco, "body.troco:", body.troco)
+    console.log("[v0] Pedido recebido - pagamento:", pagamento, "troco:", troco, "taxaEntrega:", taxaEntregaValor)
     
     // Aceitar itens de diferentes formatos
     let itens = Array.isArray(body.itens) ? body.itens : []
@@ -172,10 +174,11 @@ export async function POST(request: Request) {
     }
 
     // Calcular total baseado nos itens normalizados
-    const total = itens.reduce(
+    const subtotal = itens.reduce(
       (acc: number, it: any) => acc + Number(it.preco || it.precoUnitario || it.price || it.unit_price || it.product_price || 0) * Number(it.quantidade || it.quantity || 1),
       0
     )
+    const totalFinal = subtotal + taxaEntregaValor - descontoValor
 
     // Gerar número do pedido no formato CB-YYYYMMDD-XXXX
     const hoje = new Date()
@@ -193,9 +196,9 @@ export async function POST(request: Request) {
     const [pedido] = await query<DbOrder>(
       `INSERT INTO ${SCHEMA}.orders 
         (order_number, customer_name, customer_phone, customer_address, delivery_type, payment_method, cash_amount, subtotal, delivery_fee, total, status, notes)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, $8, 'pendente', $9)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pendente', $11)
        RETURNING *`,
-      [orderNumber, cliente, telefone || null, endereco || null, tipo, pagamento, troco, total, observacao || null]
+      [orderNumber, cliente, telefone || null, endereco || null, tipo, pagamento, troco, subtotal, taxaEntregaValor, totalFinal, observacao || null]
     )
 
     // Inserir itens com todos os detalhes
