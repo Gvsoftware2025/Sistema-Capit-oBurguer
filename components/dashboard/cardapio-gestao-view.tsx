@@ -76,6 +76,8 @@ export function CardapioGestaoView() {
   const [formDescricao, setFormDescricao] = useState("")
   const [formPreco, setFormPreco] = useState("")
   const [formCategoria, setFormCategoria] = useState("")
+  const [formImagem, setFormImagem] = useState("")
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   // Fetch data from API
   const { data: categoriasData, mutate: mutateCategorias } = useSWR("/api/cardapio/categorias", fetcher)
@@ -102,14 +104,49 @@ export function CardapioGestaoView() {
       setFormDescricao(produto.description || "")
       setFormPreco(produto.price.toString())
       setFormCategoria(produto.category_id.toString())
+      setFormImagem(produto.image_url || "")
     } else {
       setEditandoProduto(null)
       setFormNome("")
       setFormDescricao("")
       setFormPreco("")
       setFormCategoria(categorias[0]?.id.toString() || "")
+      setFormImagem("")
     }
     setDialogProduto(true)
+  }
+
+  const handleUploadImagem = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    if (file.size > 4 * 1024 * 1024) {
+      toast.error("Imagem muito grande. Maximo 4MB.")
+      return
+    }
+    
+    setUploadingImage(true)
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+      
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      })
+      
+      const data = await res.json()
+      if (data.url) {
+        setFormImagem(data.url)
+        toast.success("Imagem enviada!")
+      } else {
+        toast.error(data.error || "Erro ao enviar imagem")
+      }
+    } catch {
+      toast.error("Erro ao enviar imagem")
+    } finally {
+      setUploadingImage(false)
+    }
   }
 
   const salvarProduto = async () => {
@@ -120,7 +157,7 @@ export function CardapioGestaoView() {
     setSalvando(true)
     try {
       if (editandoProduto) {
-        await fetch(`/api/cardapio/produtos/${editandoProduto.id}`, {
+        const res = await fetch(`/api/cardapio/produtos/${editandoProduto.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -128,12 +165,17 @@ export function CardapioGestaoView() {
             description: formDescricao || null,
             price: parseFloat(formPreco),
             category_id: parseInt(formCategoria),
+            image_url: formImagem || null,
             is_available: editandoProduto.is_available,
           }),
         })
+        if (!res.ok) {
+          const err = await res.json()
+          throw new Error(err.error || "Erro ao atualizar")
+        }
         toast.success("Produto atualizado!")
       } else {
-        await fetch("/api/cardapio/produtos", {
+        const res = await fetch("/api/cardapio/produtos", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -141,14 +183,19 @@ export function CardapioGestaoView() {
             description: formDescricao || null,
             price: parseFloat(formPreco),
             category_id: parseInt(formCategoria),
+            image_url: formImagem || null,
           }),
         })
+        if (!res.ok) {
+          const err = await res.json()
+          throw new Error(err.error || "Erro ao adicionar")
+        }
         toast.success("Produto adicionado!")
       }
       mutateProdutos()
       setDialogProduto(false)
-    } catch {
-      toast.error("Erro ao salvar produto")
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao salvar produto")
     } finally {
       setSalvando(false)
     }
@@ -603,7 +650,32 @@ export function CardapioGestaoView() {
                 </Select>
               </div>
             </div>
-            <Button onClick={salvarProduto} className="w-full" disabled={salvando}>
+            <div className="space-y-2">
+              <Label>Imagem</Label>
+              <div className="flex gap-2 items-center">
+                <Input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={handleUploadImagem}
+                  disabled={uploadingImage}
+                  className="flex-1"
+                />
+                {uploadingImage && <Loader2 className="h-4 w-4 animate-spin" />}
+              </div>
+              {formImagem && (
+                <div className="relative w-20 h-20 border rounded overflow-hidden">
+                  <img src={formImagem} alt="Preview" className="w-full h-full object-cover" />
+                  <button 
+                    onClick={() => setFormImagem("")}
+                    className="absolute top-0 right-0 bg-red-500 text-white text-xs p-1 rounded-bl"
+                  >
+                    X
+                  </button>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">Maximo 4MB. JPG, PNG ou WebP.</p>
+            </div>
+            <Button onClick={salvarProduto} className="w-full" disabled={salvando || uploadingImage}>
               {salvando ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               {editandoProduto ? "Salvar Alterações" : "Adicionar Produto"}
             </Button>
