@@ -4,14 +4,33 @@ import type { DbProductVariation } from "@/lib/db-types"
 
 export const dynamic = "force-dynamic"
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const variacoes = await query<DbProductVariation>(
-      `SELECT pv.*, p.name as product_name 
-       FROM ${SCHEMA}.product_variations pv 
-       JOIN ${SCHEMA}.products p ON pv.product_id = p.id
-       ORDER BY p.name, pv.name`
-    )
+    const { searchParams } = new URL(request.url)
+    const productId = searchParams.get("product_id")
+    
+    let variacoes: DbProductVariation[]
+    
+    if (productId) {
+      // Filtrar por produto específico
+      variacoes = await query<DbProductVariation>(
+        `SELECT pv.*, p.name as product_name 
+         FROM ${SCHEMA}.product_variations pv 
+         JOIN ${SCHEMA}.products p ON pv.product_id = p.id
+         WHERE pv.product_id = $1
+         ORDER BY pv.name`,
+        [parseInt(productId)]
+      )
+    } else {
+      // Retornar todas
+      variacoes = await query<DbProductVariation>(
+        `SELECT pv.*, p.name as product_name 
+         FROM ${SCHEMA}.product_variations pv 
+         JOIN ${SCHEMA}.products p ON pv.product_id = p.id
+         ORDER BY p.name, pv.name`
+      )
+    }
+    
     return NextResponse.json({ variacoes })
   } catch (error) {
     console.error("[API] Erro ao buscar variações:", error)
