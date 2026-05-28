@@ -142,14 +142,25 @@ export async function POST(request: Request) {
     const cliente = String(body.cliente ?? body.customer_name ?? body.nome ?? "").trim()
     const telefone = String(body.telefone ?? body.customer_phone ?? body.phone ?? "").trim()
     const endereco = String(body.endereco ?? body.customer_address ?? body.address ?? "").trim()
-    const tipo = (body.tipo === "entrega" || body.delivery_type === "entregar") ? "entregar" : "retirar"
     const pagamento = body.pagamento || body.payment_method || "dinheiro"
     const troco = body.valorPago !== undefined ? Number(body.valorPago) : (body.troco !== undefined ? Number(body.troco) : (body.change_for !== undefined ? Number(body.change_for) : null))
     const observacao = String(body.observacao ?? body.notes ?? "").trim()
     const taxaEntregaValor = body.taxaEntrega !== undefined ? Number(body.taxaEntrega) : 0
     const descontoValor = body.desconto !== undefined ? Number(body.desconto) : 0
     
-    console.log("[v0] Pedido recebido - pagamento:", pagamento, "troco:", troco, "taxaEntrega:", taxaEntregaValor)
+    // Detectar se é pedido de mesa (ex: "Mesa 4", "mesa 10", "Mesa4")
+    const mesaMatch = cliente.match(/^mesa\s*(\d+)$/i)
+    const tableNumber = mesaMatch ? parseInt(mesaMatch[1]) : (body.table_number ? parseInt(body.table_number) : null)
+    
+    // Determinar tipo do pedido
+    let tipo = "retirar"
+    if (body.tipo === "entrega" || body.delivery_type === "entregar") {
+      tipo = "entregar"
+    } else if (tableNumber || body.tipo === "mesa" || body.delivery_type === "mesa") {
+      tipo = "mesa"
+    }
+    
+    console.log("[v0] Pedido recebido - mesa:", tableNumber, "tipo:", tipo, "pagamento:", pagamento)
     
     // Aceitar itens de diferentes formatos
     let itens = Array.isArray(body.itens) ? body.itens : []
@@ -180,26 +191,58 @@ export async function POST(request: Request) {
     )
     const totalFinal = subtotal + taxaEntregaValor - descontoValor
 
-    // Gerar número do pedido no formato CB-YYYYMMDD-XXXX
-    const hoje = new Date()
-    const dataStr = hoje.toISOString().slice(0, 10).replace(/-/g, '')
+    // Se for pedido de mesa, verificar se já existe pedido aberto para essa mesa
+    let pedido: DbOrder
+    let pedidoExistente = false
     
-    // Buscar último número do dia
-    const [{ count }] = await query<{ count: string }>(
-      `SELECT COUNT(*)::text as count FROM ${SCHEMA}.orders WHERE order_number LIKE $1`,
-      [`CB-${dataStr}-%`]
-    )
-    const proximoNum = (parseInt(count) + 1).toString().padStart(4, '0')
-    const orderNumber = `CB-${dataStr}-${proximoNum}`
+    if (tableNumber) {
+      // Buscar pedido aberto para essa mesa (status != 'finalizado')
+      const pedidosAbertos = await query<DbOrder>(
+        `SELECT * FROM ${SCHEMA}.orders 
+         WHERE table_number = $1 AND status != 'finalizado' 
+         ORDER BY created_at DESC LIMIT 1`,
+        [tableNumber]
+      )
+      
+      if (pedidosAbertos.length > 0) {
+        // Adicionar itens ao pedido existente
+        pedido = pedidosAbertos[0]
+        pedidoExistente = true
+        console.log("[v0] Adicionando itens ao pedido existente da Mesa", tableNumber, "- Pedido:", pedido.order_number)
+        
+        // Atualizar total do pedido
+        const novoTotal = Number(pedido.total) + subtotal
+        await query(
+          `UPDATE ${SCHEMA}.orders SET total = $1, subtotal = subtotal + $2 WHERE id = $3`,
+          [novoTotal, subtotal, pedido.id]
+        )
+      }
+    }
+    
+    // Se não encontrou pedido existente, criar novo
+    if (!pedidoExistente) {
+      // Gerar número do pedido no formato CB-YYYYMMDD-XXXX
+      const hoje = new Date()
+      const dataStr = hoje.toISOString().slice(0, 10).replace(/-/g, '')
+      
+      // Buscar último número do dia
+      const [{ count }] = await query<{ count: string }>(
+        `SELECT COUNT(*)::text as count FROM ${SCHEMA}.orders WHERE order_number LIKE $1`,
+        [`CB-${dataStr}-%`]
+      )
+      const proximoNum = (parseInt(count) + 1).toString().padStart(4, '0')
+      const orderNumber = `CB-${dataStr}-${proximoNum}`
 
-    // Inserir pedido
-    const [pedido] = await query<DbOrder>(
-      `INSERT INTO ${SCHEMA}.orders 
-        (order_number, customer_name, customer_phone, customer_address, delivery_type, payment_method, cash_amount, subtotal, delivery_fee, total, status, notes)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pendente', $11)
-       RETURNING *`,
-      [orderNumber, cliente, telefone || null, endereco || null, tipo, pagamento, troco, subtotal, taxaEntregaValor, totalFinal, observacao || null]
-    )
+      // Inserir pedido
+      const [novoPedido] = await query<DbOrder>(
+        `INSERT INTO ${SCHEMA}.orders 
+          (order_number, customer_name, customer_phone, customer_address, delivery_type, payment_method, cash_amount, subtotal, delivery_fee, total, status, notes, table_number)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pendente', $11, $12)
+         RETURNING *`,
+        [orderNumber, tableNumber ? `Mesa ${tableNumber}` : cliente, telefone || null, endereco || null, tipo, pagamento, troco, subtotal, taxaEntregaValor, totalFinal, observacao || null, tableNumber]
+      )
+      pedido = novoPedido
+    }
 
     // Inserir itens com todos os detalhes
     for (const item of itens) {
