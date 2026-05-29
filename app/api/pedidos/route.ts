@@ -148,6 +148,9 @@ export async function POST(request: Request) {
     const taxaEntregaValor = body.taxaEntrega !== undefined ? Number(body.taxaEntrega) : 0
     const descontoValor = body.desconto !== undefined ? Number(body.desconto) : 0
     
+    // Verificar se é para adicionar a um pedido existente (pelo ID)
+    const pedidoOriginalId = body.pedidoOriginalId || null
+    
     // Detectar se é pedido de mesa (ex: "Mesa 4", "mesa 10", "Mesa4")
     const mesaMatch = cliente.match(/^mesa\s*(\d+)$/i)
     const tableNumber = mesaMatch ? parseInt(mesaMatch[1]) : (body.table_number ? parseInt(body.table_number) : null)
@@ -160,7 +163,7 @@ export async function POST(request: Request) {
       tipo = "mesa"
     }
     
-    console.log("[v0] Pedido recebido - mesa:", tableNumber, "tipo:", tipo, "pagamento:", pagamento)
+    console.log("[v0] Pedido recebido - mesa:", tableNumber, "tipo:", tipo, "pedidoOriginalId:", pedidoOriginalId)
     
     // Aceitar itens de diferentes formatos
     let itens = Array.isArray(body.itens) ? body.itens : []
@@ -191,24 +194,20 @@ export async function POST(request: Request) {
     )
     const totalFinal = subtotal + taxaEntregaValor - descontoValor
 
-    // Se for pedido de mesa, verificar se já existe pedido aberto para essa mesa
+    // Verificar se deve adicionar a um pedido existente
     let pedido: DbOrder
     let pedidoExistente = false
     
-    if (tableNumber) {
-      // Buscar pedido aberto para essa mesa (status != 'finalizado')
-      const pedidosAbertos = await query<DbOrder>(
-        `SELECT * FROM ${SCHEMA}.orders 
-         WHERE table_number = $1 AND status != 'finalizado' 
-         ORDER BY created_at DESC LIMIT 1`,
-        [tableNumber]
+    // Prioridade 1: Se tem pedidoOriginalId, usar esse pedido
+    if (pedidoOriginalId) {
+      const [pedidoOriginal] = await query<DbOrder>(
+        `SELECT * FROM ${SCHEMA}.orders WHERE id = $1`,
+        [parseInt(pedidoOriginalId)]
       )
-      
-      if (pedidosAbertos.length > 0) {
-        // Adicionar itens ao pedido existente
-        pedido = pedidosAbertos[0]
+      if (pedidoOriginal) {
+        pedido = pedidoOriginal
         pedidoExistente = true
-        console.log("[v0] Adicionando itens ao pedido existente da Mesa", tableNumber, "- Pedido:", pedido.order_number)
+        console.log("[v0] Adicionando itens ao pedido existente por ID:", pedidoOriginalId)
         
         // Atualizar total do pedido
         const novoTotal = Number(pedido.total) + subtotal
@@ -216,6 +215,34 @@ export async function POST(request: Request) {
           `UPDATE ${SCHEMA}.orders SET total = $1, subtotal = subtotal + $2 WHERE id = $3`,
           [novoTotal, subtotal, pedido.id]
         )
+      }
+    }
+    
+    // Prioridade 2: Se for pedido de mesa e NÃO veio do sistema (cardapio online), verificar mesa existente
+    // Só junta automaticamente se veio do cardapio online (sem pedidoOriginalId)
+    if (!pedidoExistente && tableNumber && !pedidoOriginalId) {
+      // Verificar se é do cardapio online (tem delivery_type no body original)
+      const isCardapioOnline = body.delivery_type === "mesa" || body.tipo === "mesa"
+      
+      if (isCardapioOnline) {
+        const pedidosAbertos = await query<DbOrder>(
+          `SELECT * FROM ${SCHEMA}.orders 
+           WHERE table_number = $1 AND status NOT IN ('finalizado', 'cancelado', 'entregue') 
+           ORDER BY created_at DESC LIMIT 1`,
+          [tableNumber]
+        )
+        
+        if (pedidosAbertos.length > 0) {
+          pedido = pedidosAbertos[0]
+          pedidoExistente = true
+          console.log("[v0] Adicionando itens ao pedido existente da Mesa", tableNumber, "- Pedido:", pedido.order_number)
+          
+          const novoTotal = Number(pedido.total) + subtotal
+          await query(
+            `UPDATE ${SCHEMA}.orders SET total = $1, subtotal = subtotal + $2 WHERE id = $3`,
+            [novoTotal, subtotal, pedido.id]
+          )
+        }
       }
     }
     
