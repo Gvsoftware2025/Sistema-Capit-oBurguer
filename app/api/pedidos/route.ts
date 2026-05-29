@@ -222,32 +222,28 @@ export async function POST(request: Request) {
       }
     }
     
-    // Prioridade 2: Se for pedido de mesa do CARDAPIO ONLINE (nao do sistema de gestao)
-    // Cardapio online envia delivery_type = "mesa", sistema de gestao envia tipo = "retirada" ou "entrega"
+    // Prioridade 2: Se for pedido de mesa, verificar se ja existe pedido aberto para essa mesa
+    // SEMPRE junta pedidos de mesa, independente de onde veio (cardapio online ou sistema)
+    // EXCETO se ja veio com pedidoOriginalId (que ja foi tratado acima)
     if (!pedidoExistente && tableNumber && !pedidoIdNum) {
-      // Verificar se e do cardapio online (tem delivery_type = "mesa" no body)
-      const isCardapioOnline = body.delivery_type === "mesa"
+      const pedidosAbertos = await query<DbOrder>(
+        `SELECT * FROM ${SCHEMA}.orders 
+         WHERE table_number = $1 AND status NOT IN ('finalizado', 'cancelado', 'entregue') 
+         ORDER BY created_at DESC LIMIT 1`,
+        [tableNumber]
+      )
       
-      if (isCardapioOnline) {
-        const pedidosAbertos = await query<DbOrder>(
-          `SELECT * FROM ${SCHEMA}.orders 
-           WHERE table_number = $1 AND status NOT IN ('finalizado', 'cancelado', 'entregue') 
-           ORDER BY created_at DESC LIMIT 1`,
-          [tableNumber]
-        )
+      if (pedidosAbertos.length > 0) {
+        pedido = pedidosAbertos[0]
+        pedidoExistente = true
+        console.log("[v0] Adicionando itens ao pedido existente da Mesa", tableNumber, "- Pedido:", pedido.order_number)
         
-        if (pedidosAbertos.length > 0) {
-          pedido = pedidosAbertos[0]
-          pedidoExistente = true
-          console.log("[v0] Cardapio online - Adicionando itens ao pedido existente da Mesa", tableNumber)
-          
-          const novoTotal = Number(pedido.total) + subtotal
-          const novoSubtotal = Number(pedido.subtotal || 0) + subtotal
-          await query(
-            `UPDATE ${SCHEMA}.orders SET total = $1, subtotal = $2 WHERE id = $3`,
-            [novoTotal, novoSubtotal, pedido.id]
-          )
-        }
+        const novoTotal = Number(pedido.total) + subtotal
+        const novoSubtotal = Number(pedido.subtotal || 0) + subtotal
+        await query(
+          `UPDATE ${SCHEMA}.orders SET total = $1, subtotal = $2 WHERE id = $3`,
+          [novoTotal, novoSubtotal, pedido.id]
+        )
       }
     }
     
