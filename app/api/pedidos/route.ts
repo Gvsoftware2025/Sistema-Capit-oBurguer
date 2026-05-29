@@ -253,22 +253,47 @@ export async function POST(request: Request) {
       const hoje = new Date()
       const dataStr = hoje.toISOString().slice(0, 10).replace(/-/g, '')
       
-      // Buscar último número do dia
-      const [{ count }] = await query<{ count: string }>(
-        `SELECT COUNT(*)::text as count FROM ${SCHEMA}.orders WHERE order_number LIKE $1`,
-        [`CB-${dataStr}-%`]
-      )
-      const proximoNum = (parseInt(count) + 1).toString().padStart(4, '0')
-      const orderNumber = `CB-${dataStr}-${proximoNum}`
+      // Usar INSERT com subquery para gerar numero unico atomicamente
+      // Isso evita race conditions quando dois pedidos sao criados ao mesmo tempo
+      let novoPedido: DbOrder | null = null
+      let tentativas = 0
+      const maxTentativas = 5
+      
+      while (!novoPedido && tentativas < maxTentativas) {
+        tentativas++
+        try {
+          // Buscar o maior numero do dia e incrementar
+          const [{ max_num }] = await query<{ max_num: string | null }>(
+            `SELECT MAX(SUBSTRING(order_number FROM 'CB-${dataStr}-(\\d+)')::int)::text as max_num 
+             FROM ${SCHEMA}.orders 
+             WHERE order_number LIKE $1`,
+            [`CB-${dataStr}-%`]
+          )
+          const proximoNum = ((parseInt(max_num || '0') || 0) + 1).toString().padStart(4, '0')
+          const orderNumber = `CB-${dataStr}-${proximoNum}`
 
-      // Inserir pedido
-      const [novoPedido] = await query<DbOrder>(
-        `INSERT INTO ${SCHEMA}.orders 
-          (order_number, customer_name, customer_phone, customer_address, delivery_type, payment_method, cash_amount, subtotal, delivery_fee, total, status, notes, table_number)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pendente', $11, $12)
-         RETURNING *`,
-        [orderNumber, tableNumber ? `Mesa ${tableNumber}` : cliente, telefone || null, endereco || null, tipo, pagamento, troco, subtotal, taxaEntregaValor, totalFinal, observacao || null, tableNumber]
-      )
+          // Inserir pedido
+          const [inserted] = await query<DbOrder>(
+            `INSERT INTO ${SCHEMA}.orders 
+              (order_number, customer_name, customer_phone, customer_address, delivery_type, payment_method, cash_amount, subtotal, delivery_fee, total, status, notes, table_number)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pendente', $11, $12)
+             RETURNING *`,
+            [orderNumber, tableNumber ? `Mesa ${tableNumber}` : cliente, telefone || null, endereco || null, tipo, pagamento, troco, subtotal, taxaEntregaValor, totalFinal, observacao || null, tableNumber]
+          )
+          novoPedido = inserted
+        } catch (insertError: any) {
+          // Se for erro de chave duplicada, tentar novamente
+          if (insertError?.code === '23505' && tentativas < maxTentativas) {
+            console.log(`[v0] Tentativa ${tentativas} falhou por duplicata, tentando novamente...`)
+            continue
+          }
+          throw insertError
+        }
+      }
+      
+      if (!novoPedido) {
+        throw new Error('Falha ao criar pedido apos multiplas tentativas')
+      }
       pedido = novoPedido
     }
 
@@ -338,7 +363,7 @@ export async function POST(request: Request) {
           tipo || "retirar",
           pagamento || "dinheiro",
           subtotal,
-          taxaEntrega,
+          taxaEntregaValor,
           totalFinal,
           itensJson
         ]
