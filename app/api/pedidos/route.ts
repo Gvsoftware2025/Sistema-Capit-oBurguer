@@ -198,31 +198,35 @@ export async function POST(request: Request) {
     let pedido: DbOrder
     let pedidoExistente = false
     
-    // Prioridade 1: Se tem pedidoOriginalId, usar esse pedido
-    if (pedidoOriginalId) {
+    // Prioridade 1: Se tem pedidoOriginalId (botao "Adicionar Itens" do sistema de gestao)
+    // IMPORTANTE: pedidoOriginalId pode vir como string, numero ou null
+    const pedidoIdNum = pedidoOriginalId ? parseInt(String(pedidoOriginalId)) : null
+    
+    if (pedidoIdNum && !isNaN(pedidoIdNum)) {
       const [pedidoOriginal] = await query<DbOrder>(
         `SELECT * FROM ${SCHEMA}.orders WHERE id = $1`,
-        [parseInt(pedidoOriginalId)]
+        [pedidoIdNum]
       )
       if (pedidoOriginal) {
         pedido = pedidoOriginal
         pedidoExistente = true
-        console.log("[v0] Adicionando itens ao pedido existente por ID:", pedidoOriginalId)
+        console.log("[v0] Adicionando itens ao pedido existente por ID:", pedidoIdNum)
         
-        // Atualizar total do pedido
+        // Atualizar total do pedido (apenas soma o subtotal dos novos itens)
         const novoTotal = Number(pedido.total) + subtotal
+        const novoSubtotal = Number(pedido.subtotal || 0) + subtotal
         await query(
-          `UPDATE ${SCHEMA}.orders SET total = $1, subtotal = subtotal + $2 WHERE id = $3`,
-          [novoTotal, subtotal, pedido.id]
+          `UPDATE ${SCHEMA}.orders SET total = $1, subtotal = $2 WHERE id = $3`,
+          [novoTotal, novoSubtotal, pedido.id]
         )
       }
     }
     
-    // Prioridade 2: Se for pedido de mesa e NÃO veio do sistema (cardapio online), verificar mesa existente
-    // Só junta automaticamente se veio do cardapio online (sem pedidoOriginalId)
-    if (!pedidoExistente && tableNumber && !pedidoOriginalId) {
-      // Verificar se é do cardapio online (tem delivery_type no body original)
-      const isCardapioOnline = body.delivery_type === "mesa" || body.tipo === "mesa"
+    // Prioridade 2: Se for pedido de mesa do CARDAPIO ONLINE (nao do sistema de gestao)
+    // Cardapio online envia delivery_type = "mesa", sistema de gestao envia tipo = "retirada" ou "entrega"
+    if (!pedidoExistente && tableNumber && !pedidoIdNum) {
+      // Verificar se e do cardapio online (tem delivery_type = "mesa" no body)
+      const isCardapioOnline = body.delivery_type === "mesa"
       
       if (isCardapioOnline) {
         const pedidosAbertos = await query<DbOrder>(
@@ -235,12 +239,13 @@ export async function POST(request: Request) {
         if (pedidosAbertos.length > 0) {
           pedido = pedidosAbertos[0]
           pedidoExistente = true
-          console.log("[v0] Adicionando itens ao pedido existente da Mesa", tableNumber, "- Pedido:", pedido.order_number)
+          console.log("[v0] Cardapio online - Adicionando itens ao pedido existente da Mesa", tableNumber)
           
           const novoTotal = Number(pedido.total) + subtotal
+          const novoSubtotal = Number(pedido.subtotal || 0) + subtotal
           await query(
-            `UPDATE ${SCHEMA}.orders SET total = $1, subtotal = subtotal + $2 WHERE id = $3`,
-            [novoTotal, subtotal, pedido.id]
+            `UPDATE ${SCHEMA}.orders SET total = $1, subtotal = $2 WHERE id = $3`,
+            [novoTotal, novoSubtotal, pedido.id]
           )
         }
       }

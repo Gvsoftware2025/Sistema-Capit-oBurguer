@@ -186,20 +186,9 @@ export function NovoPedidoView() {
           setPedidoOriginalId(pedido.id)
           setNomeCliente(pedido.cliente)
           setIsEntrega(pedido.tipo === "entrega")
-          // Converter itens do pedido para o formato do carrinho
-          const itensConvertidos = (pedido.itens || []).map((item: any, index: number) => ({
-            id: `edit-${index}-${Date.now()}`,
-            produtoId: 0,
-            nome: item.nome || item.product_name || "Item",
-            preco: Number(item.preco || item.unit_price || 0),
-            quantidade: Number(item.quantidade || item.quantity || 1),
-            maionese: item.maionese,
-            extraMaioneses: item.extraMaioneses,
-            adicionais: item.adicionais,
-            acompanhamentos: item.acompanhamentos,
-            observacao: item.observacao,
-          }))
-          setItens(itensConvertidos)
+          // NAO carregar itens antigos - apenas adicionar NOVOS itens ao pedido
+          // Os itens novos serao adicionados pelo usuario e a API vai somar ao pedido existente
+          setItens([]) // Carrinho vazio para adicionar novos itens
           setEtapa("cardapio")
           localStorage.removeItem("pedido_para_editar")
         } catch (e) {
