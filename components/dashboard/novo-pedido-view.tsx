@@ -111,6 +111,10 @@ export function NovoPedidoView() {
   // Variacoes de produtos (Individual, Meia, Inteira)
   const [productVariations, setProductVariations] = useState<ProductVariation[]>([])
   const [selectedVariation, setSelectedVariation] = useState<ProductVariation | null>(null)
+  
+  // Addons especificos do produto selecionado
+  const [productAddons, setProductAddons] = useState<Adicional[]>([])
+  const [loadingAddons, setLoadingAddons] = useState(false)
 
   // Produto Diversos (valor editavel)
   const [modalDiversos, setModalDiversos] = useState(false)
@@ -218,16 +222,19 @@ export function NovoPedidoView() {
     setProdutoSelecionado(produto)
     setModalAberto(true)
     
-    // Carregar opcoes especiais e variacoes do produto
+    // Carregar opcoes especiais, variacoes e addons do produto
     setLoadingOptions(true)
+    setLoadingAddons(true)
     try {
-      const [optionsRes, variationsRes] = await Promise.all([
+      const [optionsRes, variationsRes, addonsRes] = await Promise.all([
         fetch(`/api/cardapio/product-options?product_id=${produto.id}`),
-        fetch(`/api/cardapio/variacoes?product_id=${produto.id}`)
+        fetch(`/api/cardapio/variacoes?product_id=${produto.id}`),
+        fetch(`/api/cardapio/produtos/${produto.id}/addons`)
       ])
       
       const optionsData = await optionsRes.json()
       const variationsData = await variationsRes.json()
+      const addonsData = await addonsRes.json()
       
       if (optionsData.options && optionsData.options.length > 0) {
         setProductOptions(optionsData.options)
@@ -239,12 +246,17 @@ export function NovoPedidoView() {
       const variacoesDoProduto = (variationsData.variacoes || [])
         .filter((v: ProductVariation) => v.product_id === produto.id && v.is_available)
       setProductVariations(variacoesDoProduto)
+      
+      // Addons especificos do produto
+      setProductAddons(addonsData.addons || [])
     } catch (error) {
       console.error("Erro ao carregar opcoes:", error)
       setProductOptions([])
       setProductVariations([])
+      setProductAddons([])
     } finally {
       setLoadingOptions(false)
+      setLoadingAddons(false)
     }
   }
 
@@ -260,7 +272,8 @@ export function NovoPedidoView() {
     const adicionaisArr = Object.entries(adicionaisSelecionados)
       .filter(([, qty]) => qty > 0)
       .map(([nome, quantidade]) => {
-        const add = adicionais.find((a) => a.name === nome)
+        // Procurar nos addons especificos do produto primeiro, depois nos gerais
+        const add = productAddons.find((a) => a.name === nome) || adicionais.find((a) => a.name === nome)
         return { nome, quantidade, preco: add ? Number(add.price) : 0 }
       })
 
@@ -1057,8 +1070,61 @@ export function NovoPedidoView() {
               </div>
             )}
 
-            {/* Adicionais - Só mostra para HAMBURGUERES */}
-            {adicionais.length > 0 && (() => {
+            {/* Adicionais especificos do produto (batata: catupiry/cheddar, hamburguer: bacon/queijo, etc) */}
+            {productAddons.length > 0 && (
+              <div>
+                <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                  Acrescimos <span className="text-amber-500">(Opcional)</span>
+                </label>
+                <div className="space-y-2">
+                  {productAddons.map((add) => {
+                    const qty = adicionaisSelecionados[add.name] || 0
+                    return (
+                      <div
+                        key={add.id}
+                        className={cn(
+                          "flex items-center justify-between px-3 py-2 rounded-lg border transition-all",
+                          qty > 0 ? "border-amber-500 bg-amber-500/10" : "border-border"
+                        )}
+                      >
+                        <div>
+                          <span className="font-medium">{add.name}</span>
+                          {Number(add.price) > 0 && (
+                            <span className="text-amber-500 text-sm ml-2">+R$ {Number(add.price).toFixed(2)}</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {qty > 0 && (
+                            <button
+                              onClick={() => setAdicionaisSelecionados({
+                                ...adicionaisSelecionados,
+                                [add.name]: qty - 1,
+                              })}
+                              className="w-7 h-7 rounded-full border border-border flex items-center justify-center"
+                            >
+                              <Minus className="h-3 w-3" />
+                            </button>
+                          )}
+                          <span className="w-5 text-center font-bold">{qty}</span>
+                          <button
+                            onClick={() => setAdicionaisSelecionados({
+                              ...adicionaisSelecionados,
+                              [add.name]: Math.min(qty + 1, add.max_quantity || 5),
+                            })}
+                            className="w-7 h-7 rounded-full bg-amber-500 flex items-center justify-center"
+                          >
+                            <Plus className="h-3 w-3 text-black" />
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+            
+            {/* Adicionais gerais - Só mostra para HAMBURGUERES que NAO tem addons especificos */}
+            {productAddons.length === 0 && adicionais.length > 0 && (() => {
               const cat = categorias.find(c => c.id === produtoSelecionado?.category_id)
               const isHamburguer = cat?.name?.toLowerCase().includes("hamburguer") || cat?.name?.toLowerCase().includes("lanche") || cat?.name?.toLowerCase().includes("burger") || cat?.name?.toLowerCase().includes("burguer")
               return isHamburguer
@@ -1130,7 +1196,8 @@ export function NovoPedidoView() {
               className="w-full h-12 bg-primary hover:bg-primary/90 font-bold"
             >
               {"Adicionar R$ " + (((selectedVariation ? selectedVariation.price : Number(produtoSelecionado?.price || 0)) + extraMaioneses.length * 2 + Object.entries(adicionaisSelecionados).reduce((acc, [nome, qty]) => {
-                const add = adicionais.find((a) => a.name === nome)
+                // Procurar nos addons especificos do produto primeiro, depois nos gerais
+                const add = productAddons.find((a) => a.name === nome) || adicionais.find((a) => a.name === nome)
                 return acc + (add ? Number(add.price) * qty : 0)
               }, 0)) * quantidadeItem).toFixed(2)}
             </Button>
