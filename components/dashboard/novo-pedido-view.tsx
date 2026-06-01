@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search, Plus, Minus, User, Check, ArrowLeft, ArrowRight, Package, ShoppingBag, X, Loader2, Edit3, DollarSign, Truck, CreditCard, Banknote, QrCode } from "lucide-react"
+import { Search, Plus, Minus, User, Check, ArrowLeft, ArrowRight, Package, ShoppingBag, X, Loader2, Edit3, DollarSign, Truck, CreditCard, Banknote, QrCode, UtensilsCrossed } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -139,7 +139,7 @@ export function NovoPedidoView() {
   const taxaEntrega = 2.00 // Taxa fixa de entrega
 
   // Pagamento
-  const [formaPagamento, setFormaPagamento] = useState<"dinheiro" | "pix" | "cartao">("dinheiro")
+  const [formaPagamento, setFormaPagamento] = useState<"dinheiro" | "pix" | "cartao" | "mesa">("dinheiro")
   const [valorPago, setValorPago] = useState("")
 
   // Modo edicao de pedido existente
@@ -640,27 +640,45 @@ export function NovoPedidoView() {
               <label className="text-sm font-medium text-muted-foreground mb-3 block">
                 Forma de Pagamento
               </label>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { value: "dinheiro", label: "Dinheiro", icon: Banknote },
-                  { value: "pix", label: "PIX", icon: QrCode },
-                  { value: "cartao", label: "Cartao", icon: CreditCard },
-                ].map((p) => (
-                  <button
-                    key={p.value}
-                    onClick={() => setFormaPagamento(p.value as typeof formaPagamento)}
-                    className={cn(
-                      "flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border-2 transition-all text-sm",
-                      formaPagamento === p.value
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border hover:border-primary/50"
-                    )}
-                  >
-                    <p.icon className="h-4 w-4" />
-                    {p.label}
-                  </button>
-                ))}
-              </div>
+              
+              {/* Opcao Mesa */}
+              <button
+                onClick={() => setFormaPagamento("mesa")}
+                className={cn(
+                  "w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border-2 transition-all text-sm mb-3",
+                  formaPagamento === "mesa"
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border hover:border-primary/50"
+                )}
+              >
+                <UtensilsCrossed className="h-4 w-4" />
+                Mesa (pagamento no fechamento)
+              </button>
+              
+              {/* Outras formas de pagamento - so mostra se NAO for mesa */}
+              {formaPagamento !== "mesa" && (
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { value: "dinheiro", label: "Dinheiro", icon: Banknote },
+                    { value: "pix", label: "PIX", icon: QrCode },
+                    { value: "cartao", label: "Cartao", icon: CreditCard },
+                  ].map((p) => (
+                    <button
+                      key={p.value}
+                      onClick={() => setFormaPagamento(p.value as typeof formaPagamento)}
+                      className={cn(
+                        "flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border-2 transition-all text-sm",
+                        formaPagamento === p.value
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border hover:border-primary/50"
+                      )}
+                    >
+                      <p.icon className="h-4 w-4" />
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              )}
               
               {/* Campo de troco para dinheiro */}
               {formaPagamento === "dinheiro" && (
