@@ -1196,7 +1196,7 @@ export function NovoPedidoView() {
               className="w-full h-12 bg-primary hover:bg-primary/90 font-bold"
             >
               {"Adicionar R$ " + (() => {
-                const basePrice = selectedVariation ? Number(selectedVariation.price) : Number(produtoSelecionado?.price || 0)
+                const basePrice = selectedVariation ? parseFloat(String(selectedVariation.price)) : parseFloat(String(produtoSelecionado?.price || 0))
                 const extraMaioPrice = extraMaioneses.length * 2
                 let addonsPrice = 0
                 
@@ -1204,7 +1204,7 @@ export function NovoPedidoView() {
                   if (qty > 0) {
                     const add = productAddons.find((a) => a.name === nome) || adicionais.find((a) => a.name === nome)
                     if (add) {
-                      addonsPrice += Number(add.price) * qty
+                      addonsPrice += parseFloat(String(add.price)) * qty
                     }
                   }
                 })
