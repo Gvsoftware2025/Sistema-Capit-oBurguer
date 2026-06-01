@@ -1088,7 +1088,7 @@ export function NovoPedidoView() {
                         )}
                       >
                         <div>
-                          <span className="font-medium">{add.name.replace(/\s*\(Sabor Kibe\)/i, "")}</span>
+                          <span className="font-medium">{add.name.replace(/^Kibe\s*-\s*/i, "").replace(/\s*\(Sabor Kibe\)/i, "")}</span>
                           {Number(add.price) > 0 && (
                             <span className="text-amber-500 text-sm ml-2">+R$ {Number(add.price).toFixed(2)}</span>
                           )}
