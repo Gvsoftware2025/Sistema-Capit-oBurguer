@@ -65,28 +65,34 @@ async function runMigration() {
       )
       console.log("Novas variacoes de tamanho criadas: Inteira R$45, Meia R$30")
       
-      // Criar addons de sabor (Tradicional, Catupiry, Coalhada) com preco R$0
-      // Primeiro verificar se ja existem na tabela addons
-      const sabores = ["Tradicional", "Catupiry", "Coalhada"]
+      // Criar addons de sabor ESPECIFICOS para Kibe (com prefixo para diferenciar)
+      // Esses sabores tem preco R$0 pois sao opcoes de sabor, nao acrescimos
+      const saboresKibe = [
+        { name: "Tradicional", displayName: "Tradicional" },
+        { name: "Catupiry (Sabor Kibe)", displayName: "Catupiry" },
+        { name: "Coalhada", displayName: "Coalhada" },
+      ]
       const addonIds: number[] = []
       
-      for (const sabor of sabores) {
-        // Verificar se addon ja existe
+      for (const sabor of saboresKibe) {
+        // Verificar se addon ja existe com nome exato
         let [existing] = await query<{ id: number }>(
-          `SELECT id FROM ${SCHEMA}.addons WHERE LOWER(name) = LOWER($1) LIMIT 1`,
-          [sabor]
+          `SELECT id FROM ${SCHEMA}.addons WHERE name = $1 LIMIT 1`,
+          [sabor.name]
         )
         
         if (!existing) {
-          // Criar addon
+          // Criar addon com preco 0
           [existing] = await query<{ id: number }>(
             `INSERT INTO ${SCHEMA}.addons (name, price, max_quantity, is_available) 
              VALUES ($1, 0.00, 1, true) RETURNING id`,
-            [sabor]
+            [sabor.name]
           )
-          console.log(`Addon criado: ${sabor} (ID: ${existing.id})`)
+          console.log(`Addon criado: ${sabor.name} - R$0 (ID: ${existing.id})`)
         } else {
-          console.log(`Addon ja existe: ${sabor} (ID: ${existing.id})`)
+          // Garantir que o preco seja 0
+          await query(`UPDATE ${SCHEMA}.addons SET price = 0.00 WHERE id = $1`, [existing.id])
+          console.log(`Addon ja existe: ${sabor.name} (ID: ${existing.id}) - preco atualizado para R$0`)
         }
         addonIds.push(existing.id)
       }
@@ -108,7 +114,7 @@ async function runMigration() {
           )
         }
       }
-      console.log(`Sabores associados ao Kibe: ${sabores.join(", ")}`)
+      console.log(`Sabores associados ao Kibe: Tradicional, Catupiry, Coalhada (todos R$0)`)
     }
 
     // ============================================
