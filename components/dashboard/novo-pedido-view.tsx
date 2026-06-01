@@ -115,6 +115,13 @@ export function NovoPedidoView() {
   // Addons especificos do produto selecionado
   const [productAddons, setProductAddons] = useState<Adicional[]>([])
   const [loadingAddons, setLoadingAddons] = useState(false)
+  
+  // Debug: log productAddons quando mudar
+  useEffect(() => {
+    if (productAddons.length > 0) {
+      console.log("[v0] productAddons carregados:", productAddons.map(a => ({ name: a.name, price: a.price })))
+    }
+  }, [productAddons])
 
   // Produto Diversos (valor editavel)
   const [modalDiversos, setModalDiversos] = useState(false)
@@ -1198,6 +1205,9 @@ export function NovoPedidoView() {
               {"Adicionar R$ " + (((selectedVariation ? selectedVariation.price : Number(produtoSelecionado?.price || 0)) + extraMaioneses.length * 2 + Object.entries(adicionaisSelecionados).reduce((acc, [nome, qty]) => {
                 // Procurar nos addons especificos do produto primeiro, depois nos gerais
                 const add = productAddons.find((a) => a.name === nome) || adicionais.find((a) => a.name === nome)
+                if (qty > 0) {
+                  console.log("[v0] Calculo addon:", nome, "qty:", qty, "found:", add ? { name: add.name, price: add.price } : "NOT FOUND", "productAddons:", productAddons.length)
+                }
                 return acc + (add ? Number(add.price) * qty : 0)
               }, 0)) * quantidadeItem).toFixed(2)}
             </Button>
