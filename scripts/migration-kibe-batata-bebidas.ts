@@ -3,6 +3,7 @@
  * 1. KIBE - Corrigir estrutura (variacoes e sabores como addons)
  * 2. BATATA FRITA - Adicionar acrescimos especificos
  * 3. BEBIDAS - Adicionar novos produtos (Budweiser 600ml e Imperio Ultra Long Neck)
+ * 4. ORDER_ITEMS - Adicionar coluna notes para observacao do item
  */
 
 import { query, SCHEMA } from "../lib/db"
@@ -12,6 +13,27 @@ async function runMigration() {
   console.log("Schema:", SCHEMA)
 
   try {
+    // ============================================
+    // 0. ORDER_ITEMS - Adicionar coluna notes
+    // ============================================
+    console.log("\n--- 0. Verificando coluna notes em order_items ---")
+    
+    // Verificar se a coluna notes ja existe
+    const [colExists] = await query<{ exists: boolean }>(
+      `SELECT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = $1 AND table_name = 'order_items' AND column_name = 'notes'
+      ) as exists`,
+      [SCHEMA.replace(/"/g, '')]
+    )
+    
+    if (colExists?.exists) {
+      console.log("Coluna 'notes' ja existe em order_items")
+    } else {
+      await query(`ALTER TABLE ${SCHEMA}.order_items ADD COLUMN IF NOT EXISTS notes TEXT`)
+      console.log("Coluna 'notes' adicionada a tabela order_items")
+    }
+
     // ============================================
     // 1. KIBE - Corrigir estrutura
     // ============================================
