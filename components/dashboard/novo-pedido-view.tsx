@@ -1200,16 +1200,23 @@ export function NovoPedidoView() {
                 const extraMaioPrice = extraMaioneses.length * 2
                 let addonsPrice = 0
                 
+                console.log("[v0] DEBUG - adicionaisSelecionados:", adicionaisSelecionados)
+                console.log("[v0] DEBUG - productAddons:", productAddons.map(a => ({name: a.name, price: a.price})))
+                
                 Object.entries(adicionaisSelecionados).forEach(([nome, qty]) => {
                   if (qty > 0) {
+                    console.log("[v0] DEBUG - Buscando addon:", nome, "qty:", qty)
                     const add = productAddons.find((a) => a.name === nome) || adicionais.find((a) => a.name === nome)
+                    console.log("[v0] DEBUG - Addon encontrado:", add)
                     if (add) {
                       addonsPrice += Number(add.price) * qty
+                      console.log("[v0] DEBUG - addonsPrice agora:", addonsPrice)
                     }
                   }
                 })
                 
                 const total = (basePrice + extraMaioPrice + addonsPrice) * quantidadeItem
+                console.log("[v0] DEBUG - Total final:", total, "basePrice:", basePrice, "addonsPrice:", addonsPrice)
                 return total.toFixed(2)
               })()}
             </Button>
