@@ -96,15 +96,6 @@ export function DashboardView() {
     mutate()
   }
 
-  const finalizarPedido = async (id: string) => {
-    await fetch(`/api/pedidos/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "finalizado" }),
-    })
-    mutate()
-  }
-
   const excluirPedido = async (id: string) => {
     if (!confirm("Tem certeza que deseja excluir este pedido?")) return
     await fetch(`/api/pedidos/${id}`, {
