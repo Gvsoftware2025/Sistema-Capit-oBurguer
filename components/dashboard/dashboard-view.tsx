@@ -129,6 +129,31 @@ export function DashboardView() {
     router.push("/dashboard/novo-pedido?editar=true")
   }
 
+  const finalizarPedido = async (pedido: Pedido, pagamento: { forma: string; valorPago: number; restante: number }) => {
+    try {
+      const response = await fetch(`/api/pedidos/${pedido.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "finalizado",
+          formaPagamento: pagamento.forma,
+          valorPago: pagamento.valorPago,
+          valorRestante: pagamento.restante,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Erro ao finalizar pedido")
+      }
+
+      mutate()
+      setModalAberto(false)
+    } catch (error) {
+      console.error("Erro ao finalizar pedido:", error)
+      throw error
+    }
+  }
+
   const pedidosAtivos = pedidos.filter((p) => p.status !== "finalizado")
   const pedidosFiltrados =
     filtroAtivo === "todos"
@@ -187,6 +212,7 @@ export function DashboardView() {
         onFechar={fecharModal}
         onImprimir={imprimirPedido}
         onAdicionarItens={adicionarItensAoPedido}
+        onFinalizarPedido={finalizarPedido}
       />
 
       <StatsBar
