@@ -28,8 +28,7 @@ export async function GET(request: Request) {
             'extraMaioneses', oi.extra_maioneses,
             'addons', oi.addons,
             'acompanhamentos', oi.acompanhamentos,
-            'itemTotal', oi.item_total,
-            'notes', oi.notes
+            'itemTotal', oi.item_total
           )
         ) FILTER (WHERE oi.id IS NOT NULL), '[]') as items
       FROM ${SCHEMA}.orders o
@@ -107,7 +106,6 @@ export async function GET(request: Request) {
           extraMaioneses: extraMaioParsed,
           adicionais: adicionaisParsed,
           acompanhamentos: it.acompanhamentos,
-          observacao: it.notes || null,
           preco: Number(it.itemTotal) / it.quantity,
         }
       }),
@@ -318,7 +316,6 @@ export async function POST(request: Request) {
       // Extrair detalhes do item
       const variacao = item.variacao || item.variation || item.variation_name || variacaoExtraida || null
       const maionese = item.maionese || item.mayo || null
-      const observacaoItem = item.observacao || item.notes || null
       // extra_maioneses é TEXT[] no banco, não JSON
       const extraMaionesisArr = item.extraMaioneses || item.extra_maioneses || []
       const extraMaioneses = Array.isArray(extraMaionesisArr) && extraMaionesisArr.length > 0 
