@@ -643,7 +643,7 @@ export function NovoPedidoView() {
               
               {/* Opcao Mesa */}
               <button
-                onClick={() => setFormaPagamento("mesa")}
+                onClick={() => setFormaPagamento(formaPagamento === "mesa" ? "dinheiro" : "mesa")}
                 className={cn(
                   "w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border-2 transition-all text-sm mb-3",
                   formaPagamento === "mesa"
@@ -653,6 +653,7 @@ export function NovoPedidoView() {
               >
                 <UtensilsCrossed className="h-4 w-4" />
                 Mesa (pagamento no fechamento)
+                {formaPagamento === "mesa" && <Check className="h-4 w-4 ml-2" />}
               </button>
               
               {/* Outras formas de pagamento - so mostra se NAO for mesa */}

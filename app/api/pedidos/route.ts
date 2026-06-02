@@ -329,8 +329,8 @@ export async function POST(request: Request) {
       
       await query(
         `INSERT INTO ${SCHEMA}.order_items 
-          (order_id, product_name, product_price, quantity, variation_name, maionese, extra_maioneses, addons, acompanhamentos, item_total, notes)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+          (order_id, product_name, product_price, quantity, variation_name, maionese, extra_maioneses, addons, acompanhamentos, item_total)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
         [
           pedido.id, 
           nomeBase, 
@@ -341,8 +341,7 @@ export async function POST(request: Request) {
           extraMaioneses,
           adicionais,
           acompanhamentos,
-          itemPreco * itemQuantidade,
-          observacaoItem
+          itemPreco * itemQuantidade
         ]
       )
     }
