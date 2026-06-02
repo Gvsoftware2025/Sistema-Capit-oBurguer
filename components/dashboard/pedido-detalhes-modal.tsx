@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -7,6 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   User,
   Phone,
@@ -19,6 +21,10 @@ import {
   X,
   Plus,
   UtensilsCrossed,
+  Banknote,
+  QrCode,
+  CreditCard,
+  CheckCircle,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Pedido } from "@/lib/types"
@@ -29,6 +35,7 @@ interface PedidoDetalhesModalProps {
   onFechar: () => void
   onImprimir?: (pedido: Pedido) => void
   onAdicionarItens?: (pedido: Pedido) => void
+  onFinalizarPedido?: (pedido: Pedido, pagamento: { forma: string; valorPago: number; restante: number }) => void
 }
 
 export function PedidoDetalhesModal({
@@ -37,8 +44,37 @@ export function PedidoDetalhesModal({
   onFechar,
   onImprimir,
   onAdicionarItens,
+  onFinalizarPedido,
 }: PedidoDetalhesModalProps) {
+  const [mostrarPagamento, setMostrarPagamento] = useState(false)
+  const [formaPagamento, setFormaPagamento] = useState<"dinheiro" | "pix" | "cartao">("dinheiro")
+  const [valorPago, setValorPago] = useState("")
+  const [finalizando, setFinalizando] = useState(false)
+
   if (!pedido) return null
+
+  const total = pedido.total
+  const valorPagoNum = parseFloat(valorPago) || 0
+  const restante = Math.max(0, total - valorPagoNum)
+
+  const handleFinalizar = async () => {
+    if (!onFinalizarPedido) return
+    setFinalizando(true)
+    try {
+      await onFinalizarPedido(pedido, {
+        forma: formaPagamento,
+        valorPago: valorPagoNum || total,
+        restante: restante,
+      })
+      setMostrarPagamento(false)
+      setValorPago("")
+      onFechar()
+    } catch (error) {
+      console.error("Erro ao finalizar pedido:", error)
+    } finally {
+      setFinalizando(false)
+    }
+  }
 
   const statusConfig: Record<string, { label: string; bg: string; text: string }> = {
     novo: { label: "NOVO", bg: "bg-red-600", text: "text-white" },
@@ -243,6 +279,129 @@ export function PedidoDetalhesModal({
 
           {/* Botoes */}
           <div className="space-y-2">
+            {/* Secao de Pagamento */}
+            {mostrarPagamento && (
+              <div className="bg-card/80 rounded-lg border-2 border-primary p-4 space-y-4">
+                <h3 className="text-sm font-bold text-primary uppercase tracking-wider">
+                  Finalizar Pagamento
+                </h3>
+
+                {/* Formas de pagamento */}
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { value: "dinheiro", label: "Dinheiro", icon: Banknote },
+                    { value: "pix", label: "PIX", icon: QrCode },
+                    { value: "cartao", label: "Cartao", icon: CreditCard },
+                  ].map((p) => (
+                    <button
+                      key={p.value}
+                      onClick={() => setFormaPagamento(p.value as typeof formaPagamento)}
+                      className={cn(
+                        "flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border-2 transition-all text-sm",
+                        formaPagamento === p.value
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border hover:border-primary/50"
+                      )}
+                    >
+                      <p.icon className="h-4 w-4" />
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Campo valor pago (apenas para dinheiro) */}
+                {formaPagamento === "dinheiro" && (
+                  <div className="space-y-2">
+                    <label className="text-sm text-muted-foreground">
+                      Valor recebido (deixe vazio para pagar total):
+                    </label>
+                    <Input
+                      type="number"
+                      placeholder={`R$ ${total.toFixed(2)}`}
+                      value={valorPago}
+                      onChange={(e) => setValorPago(e.target.value)}
+                      className="h-12 text-lg font-bold bg-background"
+                    />
+                    
+                    {valorPagoNum > 0 && valorPagoNum < total && (
+                      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+                        <p className="text-sm text-red-500 font-bold">
+                          Falta pagar: R$ {restante.toFixed(2)}
+                        </p>
+                      </div>
+                    )}
+
+                    {valorPagoNum > total && (
+                      <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3">
+                        <p className="text-sm text-green-500 font-bold">
+                          Troco: R$ {(valorPagoNum - total).toFixed(2)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Resumo */}
+                <div className="bg-primary/10 rounded-lg p-3 space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <span>Total do pedido:</span>
+                    <span className="font-bold">R$ {total.toFixed(2)}</span>
+                  </div>
+                  {formaPagamento === "dinheiro" && valorPagoNum > 0 && (
+                    <>
+                      <div className="flex justify-between text-sm">
+                        <span>Valor recebido:</span>
+                        <span className="font-bold text-green-500">R$ {valorPagoNum.toFixed(2)}</span>
+                      </div>
+                      {restante > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span>Restante:</span>
+                          <span className="font-bold text-red-500">R$ {restante.toFixed(2)}</span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                {/* Botoes de acao */}
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setMostrarPagamento(false)
+                      setValorPago("")
+                    }}
+                    className="flex-1"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    onClick={handleFinalizar}
+                    disabled={finalizando}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold"
+                  >
+                    {finalizando ? "Finalizando..." : (
+                      <>
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Confirmar
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Botao Finalizar Pedido */}
+            {onFinalizarPedido && !mostrarPagamento && pedido.status !== "finalizado" && (
+              <Button
+                onClick={() => setMostrarPagamento(true)}
+                className="w-full h-12 bg-green-600 hover:bg-green-700 text-white font-bold"
+              >
+                <CheckCircle className="h-5 w-5 mr-2" />
+                Finalizar Pedido
+              </Button>
+            )}
+
             {onAdicionarItens && (
               <Button
                 onClick={() => onAdicionarItens(pedido)}

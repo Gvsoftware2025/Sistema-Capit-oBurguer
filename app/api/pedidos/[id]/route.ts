@@ -45,16 +45,36 @@ export async function PATCH(
     }
 
     const status = body.status as string | undefined
+    const formaPagamento = body.formaPagamento as string | undefined
+    const valorPago = body.valorPago as number | undefined
+    const valorRestante = body.valorRestante as number | undefined
+
     if (status) {
       const dbStatus = STATUS_MAP[status] || status
       
-      const [pedido] = await query<DbOrder>(
-        `UPDATE ${SCHEMA}.orders 
-         SET status = $1, updated_at = NOW() 
-         WHERE id = $2 
-         RETURNING *`,
-        [dbStatus, id]
-      )
+      // Se está finalizando, também salva a forma de pagamento
+      let updateQuery = `UPDATE ${SCHEMA}.orders SET status = $1, updated_at = NOW()`
+      const params: (string | number)[] = [dbStatus]
+      let paramIndex = 2
+
+      if (formaPagamento) {
+        updateQuery += `, payment_method = $${paramIndex}`
+        params.push(formaPagamento)
+        paramIndex++
+      }
+
+      // Se tiver valor restante (pagamento parcial), salva nas notas
+      if (valorRestante && valorRestante > 0) {
+        const nota = `Pagamento parcial: R$ ${valorPago?.toFixed(2)} - Restante: R$ ${valorRestante.toFixed(2)}`
+        updateQuery += `, notes = COALESCE(notes, '') || ' | ' || $${paramIndex}`
+        params.push(nota)
+        paramIndex++
+      }
+
+      updateQuery += ` WHERE id = $${paramIndex} RETURNING *`
+      params.push(id)
+      
+      const [pedido] = await query<DbOrder>(updateQuery, params)
       
       if (!pedido) {
         return NextResponse.json({ error: "Pedido não encontrado" }, { status: 404 })
