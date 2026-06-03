@@ -204,19 +204,19 @@ export function imprimirPedido(pedido: Pedido) {
         .item-row {
           display: flex;
           justify-content: space-between;
-          font-size: 16px;
+          font-size: 20px;
           font-weight: bold;
         }
         
         .item-detail {
-          font-size: 20px;
+          font-size: 14px;
           padding-left: 8px;
           font-weight: bold;
           color: #000;
         }
         
         .item-special {
-          font-size: 20px;
+          font-size: 14px;
           font-weight: bold;
           padding-left: 4px;
           margin-top: 2px;
