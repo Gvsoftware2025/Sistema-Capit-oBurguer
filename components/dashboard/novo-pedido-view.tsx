@@ -286,7 +286,17 @@ export function NovoPedidoView() {
     }
 
     // Usar preco e nome da variacao se selecionada
-    const precoFinal = selectedVariation ? selectedVariation.price : Number(produtoSelecionado.price)
+    const precoBase = selectedVariation ? Number(selectedVariation.price) : Number(produtoSelecionado.price)
+    
+    // Calcular preco dos adicionais
+    const precoAdicionais = adicionaisArr.reduce((acc, add) => acc + (add.preco * add.quantidade), 0)
+    
+    // Calcular preco das maioneses extras (R$2 cada)
+    const precoExtraMaioneses = extraMaioneses.length * 2
+    
+    // Preco final = base + adicionais + maioneses extras
+    const precoFinal = precoBase + precoAdicionais + precoExtraMaioneses
+    
     const nomeFinal = selectedVariation 
       ? `${produtoSelecionado.name} (${selectedVariation.name})`
       : produtoSelecionado.name
