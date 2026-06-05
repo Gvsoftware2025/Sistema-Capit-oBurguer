@@ -393,16 +393,8 @@ export function NovoPedidoView() {
   }
 
   const calcularTotalItem = (item: ItemCarrinho) => {
-    let total = item.preco * item.quantidade
-    if (item.extraMaioneses) {
-      total += item.extraMaioneses.length * 2 * item.quantidade // R$2 cada maionese extra
-    }
-    if (item.adicionais) {
-      item.adicionais.forEach((add) => {
-        total += add.preco * add.quantidade * item.quantidade
-      })
-    }
-    return total
+    // O preco do item ja inclui adicionais e maioneses extras (calculado em adicionarAoCarrinho)
+    return item.preco * item.quantidade
   }
 
   const subtotal = itens.reduce((acc, item) => acc + calcularTotalItem(item), 0)
