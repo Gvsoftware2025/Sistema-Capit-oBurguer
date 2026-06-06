@@ -25,6 +25,7 @@ export type Adicional = {
 }
 
 export type ItemPedido = {
+  id?: string
   produtoId?: string
   nome: string
   preco: number

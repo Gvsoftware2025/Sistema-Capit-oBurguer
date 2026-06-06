@@ -82,6 +82,16 @@ export function DashboardView() {
     setModalAberto(true)
   }
 
+  // Mantem o pedido selecionado no modal sincronizado com os dados atualizados
+  useEffect(() => {
+    if (pedidoSelecionado && modalAberto) {
+      const atualizado = pedidos.find((p) => p.id === pedidoSelecionado.id)
+      if (atualizado && JSON.stringify(atualizado) !== JSON.stringify(pedidoSelecionado)) {
+        setPedidoSelecionado(atualizado)
+      }
+    }
+  }, [pedidos, pedidoSelecionado, modalAberto])
+
   const fecharModal = () => {
     setModalAberto(false)
     setPedidoSelecionado(null)
@@ -204,6 +214,7 @@ export function DashboardView() {
         onImprimir={imprimirPedido}
         onAdicionarItens={adicionarItensAoPedido}
         onFinalizarPedido={finalizarPedido}
+        onItensAtualizados={() => mutate()}
       />
 
       <StatsBar

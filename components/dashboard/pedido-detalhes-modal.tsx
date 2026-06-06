@@ -25,6 +25,8 @@ import {
   QrCode,
   CreditCard,
   CheckCircle,
+  Minus,
+  Trash2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Pedido } from "@/lib/types"
@@ -36,6 +38,7 @@ interface PedidoDetalhesModalProps {
   onImprimir?: (pedido: Pedido) => void
   onAdicionarItens?: (pedido: Pedido) => void
   onFinalizarPedido?: (pedido: Pedido, pagamento: { forma: string; valorPago: number; restante: number }) => void
+  onItensAtualizados?: () => void
 }
 
 export function PedidoDetalhesModal({
@@ -45,17 +48,55 @@ export function PedidoDetalhesModal({
   onImprimir,
   onAdicionarItens,
   onFinalizarPedido,
+  onItensAtualizados,
 }: PedidoDetalhesModalProps) {
   const [mostrarPagamento, setMostrarPagamento] = useState(false)
   const [formaPagamento, setFormaPagamento] = useState<"dinheiro" | "pix" | "cartao">("dinheiro")
   const [valorPago, setValorPago] = useState("")
   const [finalizando, setFinalizando] = useState(false)
+  const [itemProcessando, setItemProcessando] = useState<string | null>(null)
 
   if (!pedido) return null
 
   const total = pedido.total
   const valorPagoNum = parseFloat(valorPago) || 0
   const restante = Math.max(0, total - valorPagoNum)
+
+  const alterarQuantidade = async (itemId: string | undefined, novaQuantidade: number) => {
+    if (!itemId || novaQuantidade < 1) return
+    setItemProcessando(itemId)
+    try {
+      await fetch(`/api/pedidos/itens/${itemId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quantidade: novaQuantidade }),
+      })
+      onItensAtualizados?.()
+    } catch (error) {
+      console.error("Erro ao alterar quantidade:", error)
+    } finally {
+      setItemProcessando(null)
+    }
+  }
+
+  const excluirItem = async (itemId: string | undefined) => {
+    if (!itemId) return
+    if (!confirm("Remover este item do pedido?")) return
+    setItemProcessando(itemId)
+    try {
+      const res = await fetch(`/api/pedidos/itens/${itemId}`, { method: "DELETE" })
+      const data = await res.json()
+      onItensAtualizados?.()
+      // Se o pedido foi excluido (era o ultimo item), fecha o modal
+      if (data.pedidoExcluido) {
+        onFechar()
+      }
+    } catch (error) {
+      console.error("Erro ao excluir item:", error)
+    } finally {
+      setItemProcessando(null)
+    }
+  }
 
   const handleFinalizar = async () => {
     if (!onFinalizarPedido) return
@@ -250,9 +291,41 @@ export function PedidoDetalhesModal({
                         </p>
                       )}
                     </div>
-                    <span className="font-bold text-primary shrink-0">
-                      R$ {(item.preco * item.quantidade).toFixed(2)}
-                    </span>
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      <span className="font-bold text-primary">
+                        R$ {(item.preco * item.quantidade).toFixed(2)}
+                      </span>
+                      {/* Controles de quantidade e exclusao */}
+                      {pedido.status !== "finalizado" && (
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => alterarQuantidade(item.id, item.quantidade - 1)}
+                            disabled={itemProcessando === item.id || item.quantidade <= 1}
+                            className="h-7 w-7 flex items-center justify-center rounded-md bg-muted hover:bg-muted/70 text-foreground disabled:opacity-40 transition-colors"
+                            title="Diminuir"
+                          >
+                            <Minus className="h-3.5 w-3.5" />
+                          </button>
+                          <span className="w-6 text-center text-sm font-bold">{item.quantidade}</span>
+                          <button
+                            onClick={() => alterarQuantidade(item.id, item.quantidade + 1)}
+                            disabled={itemProcessando === item.id}
+                            className="h-7 w-7 flex items-center justify-center rounded-md bg-primary/20 hover:bg-primary/30 text-primary disabled:opacity-40 transition-colors"
+                            title="Aumentar"
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => excluirItem(item.id)}
+                            disabled={itemProcessando === item.id}
+                            className="h-7 w-7 flex items-center justify-center rounded-md bg-red-500/10 hover:bg-red-500/20 text-red-500 disabled:opacity-40 transition-colors ml-1"
+                            title="Remover item"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
