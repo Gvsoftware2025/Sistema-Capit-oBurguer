@@ -12,7 +12,7 @@ const pool = connectionString
       connectionTimeoutMillis: 30000,
     })
   : new Pool({
-      host: process.env.DB_HOST || "168.231.93.220",
+      host: process.env.DB_HOST || "76.13.164.193",
       port: parseInt(process.env.DB_PORT || "5432"),
       database: process.env.DB_NAME || "gvsoftware",
       user: process.env.DB_USER || "gvuser",
