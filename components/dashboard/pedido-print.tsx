@@ -44,9 +44,20 @@ export function imprimirPedido(pedido: Pedido) {
   iframe.style.position = "fixed"
   iframe.style.right = "0"
   iframe.style.bottom = "0"
-  iframe.style.width = "0"
-  iframe.style.height = "0"
-  iframe.style.border = "none"
+  iframe.style.width = "80mm"
+  iframe.style.height = "1px"
+  iframe.style.border = "0"
+  iframe.style.opacity = "0"
+  iframe.style.pointerEvents = "none"
+
+  // Registra o evento antes de escrever o documento para o WebView do Tauri
+  // aguardar o conteúdo carregar antes de abrir a impressão.
+  iframe.onload = () => {
+    window.setTimeout(() => {
+      iframe.contentWindow?.focus()
+      iframe.contentWindow?.print()
+    }, 500)
+  }
   document.body.appendChild(iframe)
 
   const doc = iframe.contentWindow?.document
@@ -358,8 +369,4 @@ export function imprimirPedido(pedido: Pedido) {
   doc.open()
   doc.write(html)
   doc.close()
-
-  setTimeout(() => {
-    iframe.contentWindow?.print()
-  }, 300)
 }
