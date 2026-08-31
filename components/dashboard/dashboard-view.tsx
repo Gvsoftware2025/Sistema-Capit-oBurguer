@@ -8,7 +8,7 @@ import { FiltrosPedidos } from "./filtros-pedidos"
 import { PedidosGrid } from "./pedidos-grid"
 import { StatsBar } from "./stats-bar"
 import { PedidoDetalhesModal } from "./pedido-detalhes-modal"
-import { playOrderSound } from "@/lib/audio"
+import { playOrderSound, unlockAudio } from "@/lib/audio"
 import { imprimirPedido } from "./pedido-print"
 import type { Pedido } from "@/lib/types"
 
@@ -33,6 +33,7 @@ export function DashboardView() {
   })
 
   const ativarSom = useCallback(() => {
+    unlockAudio()
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
     }
