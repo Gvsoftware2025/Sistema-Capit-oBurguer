@@ -64,35 +64,47 @@ export function ProdutosTab() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploadingImage, setUploadingImage] = useState(false)
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const TIPOS_PERMITIDOS = ["image/png", "image/jpeg", "image/webp"]
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Validar tamanho (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("Imagem muito grande. Máximo 2MB.")
+    // Validar tipo (png, jpeg, webp)
+    if (!TIPOS_PERMITIDOS.includes(file.type)) {
+      toast.error("Formato inválido. Use PNG, JPEG ou WEBP.")
       return
     }
 
-    // Validar tipo
-    if (!file.type.startsWith("image/")) {
-      toast.error("Arquivo deve ser uma imagem")
+    // Validar tamanho (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Imagem muito grande. Máximo 5MB.")
       return
     }
 
     setUploadingImage(true)
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
 
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      const base64 = event.target?.result as string
-      setForm({ ...form, image_url: base64 })
+      const res = await fetch("/api/upload", { method: "POST", body: formData })
+      const data = await res.json()
+
+      if (!res.ok) {
+        toast.error(data.error || "Erro ao enviar imagem")
+        return
+      }
+
+      setForm((prev) => ({ ...prev, image_url: data.url }))
+      toast.success("Imagem enviada")
+    } catch {
+      toast.error("Erro ao enviar imagem")
+    } finally {
       setUploadingImage(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
     }
-    reader.onerror = () => {
-      toast.error("Erro ao carregar imagem")
-      setUploadingImage(false)
-    }
-    reader.readAsDataURL(file)
   }
 
   const removerImagem = () => {
@@ -370,7 +382,7 @@ export function ProdutosTab() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/png,image/jpeg,image/webp"
                 onChange={handleImageUpload}
                 className="hidden"
               />
@@ -378,10 +390,24 @@ export function ProdutosTab() {
               {form.image_url ? (
                 <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-border group">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={form.image_url} alt="Preview" className="w-full h-full object-cover" />
+                  <img src={form.image_url || "/placeholder.svg"} alt="Pré-visualização da imagem do produto" className="w-full h-full object-cover" />
+                  {uploadingImage && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-background/70">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingImage}
+                    className="absolute inset-x-0 bottom-0 bg-background/80 text-xs py-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    Trocar imagem
+                  </button>
                   <button
                     type="button"
                     onClick={removerImagem}
+                    disabled={uploadingImage}
                     className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <X className="h-4 w-4" />
@@ -404,7 +430,7 @@ export function ProdutosTab() {
                   )}
                 </button>
               )}
-              <p className="text-xs text-muted-foreground">PNG, JPG ou WEBP. Máximo 2MB.</p>
+              <p className="text-xs text-muted-foreground">PNG, JPEG ou WEBP. Máximo 5MB.</p>
             </div>
             <div className="flex items-center justify-between">
               <Label>Disponível</Label>
@@ -416,7 +442,7 @@ export function ProdutosTab() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setModalAberto(false)}>Cancelar</Button>
-            <Button onClick={salvar} disabled={salvando}>
+            <Button onClick={salvar} disabled={salvando || uploadingImage}>
               {salvando && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Salvar
             </Button>
