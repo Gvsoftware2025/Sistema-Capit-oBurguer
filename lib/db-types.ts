@@ -47,6 +47,7 @@ export interface DbProduct {
   category_name?: string
   name: string
   description: string | null
+  subcategory: string | null
   price: number
   image_url: string | null
   display_order: number

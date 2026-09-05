@@ -56,10 +56,20 @@ export function ProdutosTab() {
     category_id: "",
     name: "",
     description: "",
+    subcategory: "",
     price: "",
     image_url: "",
     is_available: true,
   })
+
+  // Subcategorias ja usadas na categoria selecionada, para sugerir no formulario
+  const subcategoriasSugeridas = Array.from(
+    new Set(
+      produtos
+        .filter((p) => form.category_id && p.category_id.toString() === form.category_id && p.subcategory)
+        .map((p) => p.subcategory as string)
+    )
+  ).sort((a, b) => a.localeCompare(b, "pt-BR"))
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploadingImage, setUploadingImage] = useState(false)
@@ -122,7 +132,7 @@ export function ProdutosTab() {
 
   const abrirCriar = () => {
     setEditando(null)
-    setForm({ category_id: "", name: "", description: "", price: "", image_url: "", is_available: true })
+    setForm({ category_id: "", name: "", description: "", subcategory: "", price: "", image_url: "", is_available: true })
     setModalAberto(true)
   }
 
@@ -132,6 +142,7 @@ export function ProdutosTab() {
       category_id: prod.category_id.toString(),
       name: prod.name,
       description: prod.description || "",
+      subcategory: prod.subcategory || "",
       price: prod.price.toString(),
       image_url: prod.image_url || "",
       is_available: prod.is_available,
@@ -292,6 +303,11 @@ export function ProdutosTab() {
                   </td>
                   <td className="px-4 py-3 text-muted-foreground text-sm hidden md:table-cell">
                     {prod.category_name}
+                    {prod.subcategory && (
+                      <span className="ml-2 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
+                        {prod.subcategory}
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-right font-medium text-primary">
                     R$ {Number(prod.price).toFixed(2)}
@@ -347,6 +363,27 @@ export function ProdutosTab() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="subcategory">Subcategoria</Label>
+              <Input
+                id="subcategory"
+                list="subcategorias-sugeridas"
+                value={form.subcategory}
+                onChange={(e) => setForm({ ...form, subcategory: e.target.value })}
+                placeholder="Ex: Cerveja, Refrigerante, Água"
+                disabled={!form.category_id}
+              />
+              <datalist id="subcategorias-sugeridas">
+                {subcategoriasSugeridas.map((sub) => (
+                  <option key={sub} value={sub} />
+                ))}
+              </datalist>
+              <p className="text-xs text-muted-foreground">
+                {form.category_id
+                  ? "Selecione uma sugestão ou digite uma nova subcategoria."
+                  : "Selecione uma categoria primeiro."}
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="name">Nome *</Label>
