@@ -52,7 +52,12 @@ export function imprimirPedido(pedido: Pedido) {
 
   // Registra o evento antes de escrever o documento para o WebView do Tauri
   // aguardar o conteúdo carregar antes de abrir a impressão.
+  // O onload dispara duas vezes (about:blank inicial + doc.write), então a
+  // trava abaixo garante que a impressão seja acionada apenas uma vez.
+  let jaImprimiu = false
   iframe.onload = () => {
+    if (jaImprimiu) return
+    jaImprimiu = true
     window.setTimeout(() => {
       iframe.contentWindow?.focus()
       iframe.contentWindow?.print()
