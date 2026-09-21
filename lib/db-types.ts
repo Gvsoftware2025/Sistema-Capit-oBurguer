@@ -88,6 +88,7 @@ export interface DbProductOption {
   option_name: string   // Ex: "Catupiry", "Cheddar", "Tradicional", "Coalhada"
   display_order: number
   is_available: boolean
+  is_required: boolean
 }
 
 // Historico de vendas (persiste mesmo depois de apagar pedidos)

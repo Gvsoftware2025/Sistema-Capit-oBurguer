@@ -7,6 +7,7 @@ import { ProdutosTab } from "@/components/cardapio-gestao/produtos-tab"
 import { VariacoesTab } from "@/components/cardapio-gestao/variacoes-tab"
 import { MaionesesTab } from "@/components/cardapio-gestao/maioneses-tab"
 import { AdicionaisTab } from "@/components/cardapio-gestao/adicionais-tab"
+import { OpcoesTab } from "@/components/cardapio-gestao/opcoes-tab"
 import { 
   Layers, 
   Package, 
@@ -21,6 +22,7 @@ const tabs = [
   { id: "variacoes", label: "Variações", icon: Ruler },
   { id: "maioneses", label: "Maioneses", icon: Droplet },
   { id: "adicionais", label: "Adicionais", icon: PlusCircle },
+  { id: "opcoes", label: "Opções por produto", icon: PlusCircle },
 ]
 
 export default function CardapioPage() {
@@ -71,6 +73,7 @@ export default function CardapioPage() {
         {tabAtiva === "variacoes" && <VariacoesTab />}
         {tabAtiva === "maioneses" && <MaionesesTab />}
         {tabAtiva === "adicionais" && <AdicionaisTab />}
+        {tabAtiva === "opcoes" && <OpcoesTab />}
       </div>
     </div>
   )
