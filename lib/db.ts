@@ -3,7 +3,7 @@ import { Pool } from "pg"
 // Usar connection string se disponivel, senao usar parametros separados
 const connectionString = process.env.DATABASE_URL
 
-const pool = connectionString 
+const pool = connectionString
   ? new Pool({
       connectionString,
       ssl: process.env.DATABASE_SSL === "true" ? { rejectUnauthorized: false } : false,
