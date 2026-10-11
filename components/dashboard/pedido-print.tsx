@@ -50,14 +50,6 @@ export function imprimirPedido(pedido: Pedido) {
   iframe.style.opacity = "0"
   iframe.style.pointerEvents = "none"
 
-  // Registra o evento antes de escrever o documento para o WebView do Tauri
-  // aguardar o conteúdo carregar antes de abrir a impressão.
-  iframe.onload = () => {
-    window.setTimeout(() => {
-      iframe.contentWindow?.focus()
-      iframe.contentWindow?.print()
-    }, 500)
-  }
   document.body.appendChild(iframe)
 
   const doc = iframe.contentWindow?.document
@@ -369,4 +361,14 @@ export function imprimirPedido(pedido: Pedido) {
   doc.open()
   doc.write(html)
   doc.close()
+
+  // Impressao acionada uma unica vez de forma deterministica.
+  // O conteudo (doc.write) e sincrono e o recibo nao tem recursos externos,
+  // entao um pequeno atraso e suficiente para o WebView renderizar antes de
+  // abrir o dialogo de impressao. Nao usamos iframe.onload porque ele pode
+  // disparar duas vezes (about:blank + doc.write), causando dois dialogos.
+  window.setTimeout(() => {
+    iframe.contentWindow?.focus()
+    iframe.contentWindow?.print()
+  }, 500)
 }
