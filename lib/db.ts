@@ -1,9 +1,9 @@
 import { Pool } from "pg"
 
-// Usar connection string se disponivel, senao usar parametros separados
+// Usa DATABASE_URL quando configurada; caso contrário, usa as variáveis separadas da VPS.
 const connectionString = process.env.DATABASE_URL
 
-const pool = connectionString 
+const pool = connectionString
   ? new Pool({
       connectionString,
       ssl: process.env.DATABASE_SSL === "true" ? { rejectUnauthorized: false } : false,
@@ -12,7 +12,7 @@ const pool = connectionString
       connectionTimeoutMillis: 30000,
     })
   : new Pool({
-      host: process.env.DB_HOST,
+      host: process.env.DB_HOST || "191.252.219.152",
       port: parseInt(process.env.DB_PORT || "5432"),
       database: process.env.DB_NAME,
       user: process.env.DB_USER,

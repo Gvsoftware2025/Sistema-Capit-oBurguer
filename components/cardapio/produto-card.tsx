@@ -20,6 +20,7 @@ type ProductOption = {
   option_group: string
   option_name: string
   is_available: boolean
+  is_required: boolean
 }
 
 type ProductVariation = {
@@ -82,7 +83,8 @@ export function ProdutoCard({ produto }: { produto: Produto }) {
   }
 
   const grupos = Array.from(new Set(opcoes.map(o => o.option_group)))
-  const todosGruposSelecionados = grupos.length === 0 || grupos.every(g => selectedOptions[g])
+  const gruposObrigatorios = grupos.filter((group) => opcoes.some((option) => option.option_group === group && option.is_required !== false))
+  const todosGruposSelecionados = gruposObrigatorios.length === 0 || gruposObrigatorios.every(g => selectedOptions[g])
   const variacaoObrigatoria = variacoes.length > 0
   const podeConfirmar = todosGruposSelecionados && (!variacaoObrigatoria || selectedVariation)
 
@@ -219,7 +221,7 @@ export function ProdutoCard({ produto }: { produto: Produto }) {
               return (
                 <div key={group}>
                   <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                    {group}: <span className="text-red-500">* Obrigatorio</span>
+                    {group}: {opcoes.some((option) => option.option_group === group && option.is_required !== false) && <span className="text-red-500">* Obrigatório</span>}
                   </label>
                   <div className="space-y-2">
                     {groupOptions.map((opt) => (

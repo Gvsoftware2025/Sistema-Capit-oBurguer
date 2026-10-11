@@ -34,13 +34,13 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { product_id, option_group, option_name, display_order, is_available } = body
+    const { product_id, option_group, option_name, display_order, is_available, is_required } = body
 
     const [option] = await query(
-      `INSERT INTO ${SCHEMA}.product_options (product_id, option_group, option_name, display_order, is_available)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO ${SCHEMA}.product_options (product_id, option_group, option_name, display_order, is_available, is_required)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [product_id, option_group, option_name, display_order || 0, is_available ?? true]
+      [product_id, option_group, option_name, display_order || 0, is_available ?? true, is_required ?? true]
     )
 
     return NextResponse.json({ option }, { status: 201 })
