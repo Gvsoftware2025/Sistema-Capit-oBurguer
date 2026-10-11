@@ -1,6 +1,6 @@
 import { Pool } from "pg"
 
-// Usar connection string se disponivel, senao usar parametros separados
+// Usa DATABASE_URL quando configurada; caso contrário, usa as variáveis separadas da VPS.
 const connectionString = process.env.DATABASE_URL
 
 const pool = connectionString
