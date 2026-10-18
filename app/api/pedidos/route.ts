@@ -16,8 +16,9 @@ export async function GET(request: Request) {
       whereClause = "WHERE o.status IN ('entregue', 'cancelado')"
     }
 
-    const pedidos = await query<DbOrder>(`
-      SELECT o.*, 
+    const pedidos = await query<any>(`
+      SELECT o.*,
+        to_char(o.created_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS-03:00') AS created_at_local,
         COALESCE(json_agg(
           json_build_object(
             'id', oi.id,
@@ -64,7 +65,8 @@ export async function GET(request: Request) {
         troco: p.cash_amount ? Number(p.cash_amount) : undefined,
         total: Number(p.total),
         status: p.status === "pendente" ? "novo" : p.status,
-        criadoEm: p.created_at,
+        // orders.created_at é timestamp sem fuso e guarda horário de Brasília.
+        criadoEm: p.created_at_local,
         itens: (p.items || []).map((it: any) => {
         // Parsear adicionais - pode ser array de strings ou array de objetos JSON
         let adicionaisParsed: any[] = []
@@ -252,8 +254,9 @@ export async function POST(request: Request) {
     // Se não encontrou pedido existente, criar novo
     if (!pedidoExistente) {
       // Gerar número do pedido no formato CB-YYYYMMDD-XXXX
-      const hoje = new Date()
-      const dataStr = hoje.toISOString().slice(0, 10).replace(/-/g, '')
+      const [{ dataStr }] = await query<{ dataStr: string }>(
+        `SELECT to_char(now() AT TIME ZONE 'America/Sao_Paulo', 'YYYYMMDD') AS "dataStr"`
+      )
       
       // Usar INSERT com subquery para gerar numero unico atomicamente
       // Isso evita race conditions quando dois pedidos sao criados ao mesmo tempo
@@ -275,11 +278,11 @@ export async function POST(request: Request) {
           const orderNumber = `CB-${dataStr}-${proximoNum}`
 
           // Inserir pedido
-          const [inserted] = await query<DbOrder>(
+          const [inserted] = await query<any>(
             `INSERT INTO ${SCHEMA}.orders 
               (order_number, customer_name, customer_phone, customer_address, delivery_type, payment_method, cash_amount, subtotal, delivery_fee, total, status, notes, table_number)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pendente', $11, $12)
-             RETURNING *`,
+             RETURNING *, to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS.MS-03:00') AS created_at_local`,
             [orderNumber, tableNumber ? `Mesa ${tableNumber}` : cliente, telefone || null, endereco || null, tipo, pagamento, troco, subtotal, taxaEntregaValor, totalFinal, observacao || null, tableNumber]
           )
           novoPedido = inserted
@@ -384,7 +387,7 @@ export async function POST(request: Request) {
         cliente: pedido.customer_name,
         total: Number(pedido.total),
         status: "novo",
-        criadoEm: pedido.created_at,
+        criadoEm: (pedido as DbOrder & { created_at_local?: string }).created_at_local || pedido.created_at,
       },
     }, { status: 201 })
   } catch (error: any) {
