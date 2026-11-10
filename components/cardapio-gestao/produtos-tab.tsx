@@ -31,7 +31,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toast } from "sonner"
-import { Plus, Pencil, Trash2, Loader2, Search, Upload, X } from "lucide-react"
+import { Plus, Pencil, Trash2, Loader2, Search, Upload, X, Settings2 } from "lucide-react"
+import { ConfiguradorProduto } from "@/components/cardapio-gestao/configurador-produto"
 import { useRef } from "react"
 import { cn } from "@/lib/utils"
 import type { DbProduct, DbCategory } from "@/lib/db-types"
@@ -48,6 +49,7 @@ export function ProdutosTab() {
   const [modalAberto, setModalAberto] = useState(false)
   const [editando, setEditando] = useState<DbProduct | null>(null)
   const [excluindo, setExcluindo] = useState<DbProduct | null>(null)
+  const [configurando, setConfigurando] = useState<DbProduct | null>(null)
   const [salvando, setSalvando] = useState(false)
   const [busca, setBusca] = useState("")
   const [filtroCategoria, setFiltroCategoria] = useState<string>("todas")
@@ -320,10 +322,13 @@ export function ProdutosTab() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => abrirEditar(prod)} className="h-8 w-8">
+                      <Button variant="ghost" size="icon" onClick={() => setConfigurando(prod)} className="h-8 w-8" aria-label={`Configurar opções de ${prod.name}`}>
+                        <Settings2 className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => abrirEditar(prod)} className="h-8 w-8" aria-label={`Editar ${prod.name}`}>
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => setExcluindo(prod)} className="h-8 w-8 text-destructive hover:text-destructive">
+                      <Button variant="ghost" size="icon" onClick={() => setExcluindo(prod)} className="h-8 w-8 text-destructive hover:text-destructive" aria-label={`Excluir ${prod.name}`}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -486,6 +491,14 @@ export function ProdutosTab() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {configurando && (
+        <ConfiguradorProduto
+          product={configurando}
+          open={!!configurando}
+          onOpenChange={(open) => !open && setConfigurando(null)}
+        />
+      )}
 
       {/* Confirmação de exclusão */}
       <AlertDialog open={!!excluindo} onOpenChange={() => setExcluindo(null)}>
