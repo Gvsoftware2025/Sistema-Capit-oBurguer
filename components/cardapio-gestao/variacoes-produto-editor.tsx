@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import type { DbProductVariation } from "@/lib/db-types"
 
-const fetcher = (url: string) => fetch(url).then((response) => response.json())
+const fetcher = (url: string) => fetch(url, { cache: "no-store" }).then((response) => response.json())
 
 type Props = { productId: number }
 
@@ -29,13 +29,17 @@ function VariationRow({ variation, refresh }: { variation: DbProductVariation; r
       const response = await fetch(`/api/cardapio/variacoes/${variation.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        cache: "no-store",
         body: JSON.stringify({ name: name.trim(), price: Number(price), is_available: variation.is_available }),
       })
-      if (!response.ok) throw new Error()
-      toast.success(`${name.trim()} atualizado`)
-      refresh()
+      const result = await response.json()
+      if (!response.ok || !result.variacao) throw new Error(result.error || "Falha ao salvar")
+      setName(result.variacao.name)
+      setPrice(String(result.variacao.price))
+      await refresh()
+      toast.success(`${result.variacao.name} salvo por R$ ${Number(result.variacao.price).toFixed(2)}`)
     } catch {
-      toast.error("Não foi possível salvar esta porção")
+      toast.error("Não foi possível confirmar o salvamento. Tente novamente.")
     } finally {
       setSaving(false)
     }
@@ -45,6 +49,7 @@ function VariationRow({ variation, refresh }: { variation: DbProductVariation; r
     const response = await fetch(`/api/cardapio/variacoes/${variation.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
+      cache: "no-store",
       body: JSON.stringify({ name, price: Number(price), is_available: available }),
     })
     if (!response.ok) return toast.error("Não foi possível atualizar a disponibilidade")
@@ -59,18 +64,16 @@ function VariationRow({ variation, refresh }: { variation: DbProductVariation; r
   }
 
   return (
-    <div className="grid gap-2 rounded-lg border p-3 sm:grid-cols-[minmax(0,1fr)_9rem_auto_auto_auto] sm:items-end">
-      <div className="grid grid-cols-2 gap-2 sm:col-span-2 sm:grid-cols-subgrid">
-        <div className="space-y-1">
-          <Label htmlFor={`variation-name-${variation.id}`} className="text-xs">Tamanho</Label>
-          <Input id={`variation-name-${variation.id}`} value={name} onChange={(event) => setName(event.target.value)} />
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor={`variation-price-${variation.id}`} className="text-xs">Preço (R$)</Label>
-          <Input id={`variation-price-${variation.id}`} type="number" min="0" step="0.01" value={price} onChange={(event) => setPrice(event.target.value)} />
-        </div>
+    <div className="grid min-w-0 grid-cols-2 gap-3 rounded-lg border p-3 sm:grid-cols-[minmax(0,1fr)_9rem_auto_auto_auto] sm:items-end">
+      <div className="min-w-0 space-y-1">
+        <Label htmlFor={`variation-name-${variation.id}`} className="text-xs">Tamanho / nome completo</Label>
+        <Input id={`variation-name-${variation.id}`} className="min-w-0" value={name} onChange={(event) => setName(event.target.value)} />
       </div>
-      <label className="flex items-center gap-2 text-xs text-muted-foreground">
+      <div className="min-w-0 space-y-1">
+        <Label htmlFor={`variation-price-${variation.id}`} className="text-xs">Preço (R$)</Label>
+        <Input id={`variation-price-${variation.id}`} type="number" min="0" step="0.01" value={price} onChange={(event) => setPrice(event.target.value)} />
+      </div>
+      <label className="col-span-2 flex items-center gap-2 text-xs text-muted-foreground sm:col-span-1">
         <Switch checked={variation.is_available} onCheckedChange={toggleAvailability} /> Disponível
       </label>
       <Button type="button" variant="outline" size="sm" onClick={save} disabled={saving} aria-label={`Salvar ${name}`}>

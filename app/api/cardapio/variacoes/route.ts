@@ -31,7 +31,7 @@ export async function GET(request: Request) {
       )
     }
     
-    return NextResponse.json({ variacoes })
+    return NextResponse.json({ variacoes }, { headers: { "Cache-Control": "no-store, max-age=0" } })
   } catch (error) {
     console.error("[API] Erro ao buscar variações:", error)
     return NextResponse.json({ variacoes: [], error: "Erro ao buscar" })
