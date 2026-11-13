@@ -64,24 +64,30 @@ function VariationRow({ variation, refresh }: { variation: DbProductVariation; r
   }
 
   return (
-    <div className="grid min-w-0 grid-cols-2 gap-3 rounded-lg border p-3 sm:grid-cols-[minmax(0,1fr)_9rem_auto_auto_auto] sm:items-end">
-      <div className="min-w-0 space-y-1">
-        <Label htmlFor={`variation-name-${variation.id}`} className="text-xs">Tamanho / nome completo</Label>
-        <Input id={`variation-name-${variation.id}`} className="min-w-0" value={name} onChange={(event) => setName(event.target.value)} />
+    <div className="flex min-w-0 flex-col gap-3 rounded-lg border p-3">
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_8rem] gap-3">
+        <div className="min-w-0 space-y-1">
+          <Label htmlFor={`variation-name-${variation.id}`} className="text-xs">Tamanho / nome completo</Label>
+          <Input id={`variation-name-${variation.id}`} className="w-full min-w-0" value={name} onChange={(event) => setName(event.target.value)} />
+        </div>
+        <div className="min-w-0 space-y-1">
+          <Label htmlFor={`variation-price-${variation.id}`} className="text-xs">Preço (R$)</Label>
+          <Input id={`variation-price-${variation.id}`} className="w-full min-w-0" type="number" min="0" step="0.01" value={price} onChange={(event) => setPrice(event.target.value)} />
+        </div>
       </div>
-      <div className="min-w-0 space-y-1">
-        <Label htmlFor={`variation-price-${variation.id}`} className="text-xs">Preço (R$)</Label>
-        <Input id={`variation-price-${variation.id}`} type="number" min="0" step="0.01" value={price} onChange={(event) => setPrice(event.target.value)} />
+      <div className="flex min-w-0 items-center justify-between gap-2">
+        <label className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+          <Switch checked={variation.is_available} onCheckedChange={toggleAvailability} /> Disponível
+        </label>
+        <div className="flex shrink-0 items-center gap-1">
+          <Button type="button" variant="outline" size="sm" onClick={save} disabled={saving} aria-label={`Salvar ${name}`}>
+            {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+          </Button>
+          <Button type="button" variant="ghost" size="sm" onClick={remove} aria-label={`Excluir ${name}`}>
+            <Trash2 className="size-4 text-destructive" />
+          </Button>
+        </div>
       </div>
-      <label className="col-span-2 flex items-center gap-2 text-xs text-muted-foreground sm:col-span-1">
-        <Switch checked={variation.is_available} onCheckedChange={toggleAvailability} /> Disponível
-      </label>
-      <Button type="button" variant="outline" size="sm" onClick={save} disabled={saving} aria-label={`Salvar ${name}`}>
-        {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-      </Button>
-      <Button type="button" variant="ghost" size="sm" onClick={remove} aria-label={`Excluir ${name}`}>
-        <Trash2 className="size-4 text-destructive" />
-      </Button>
     </div>
   )
 }
