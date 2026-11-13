@@ -227,9 +227,9 @@ export function NovoPedidoView() {
     setLoadingAddons(true)
     try {
       const [optionsRes, variationsRes, addonsRes] = await Promise.all([
-        fetch(`/api/cardapio/product-options?product_id=${produto.id}`),
-        fetch(`/api/cardapio/variacoes?product_id=${produto.id}`),
-        fetch(`/api/cardapio/produtos/${produto.id}/addons`)
+        fetch(`/api/cardapio/product-options?product_id=${produto.id}`, { cache: "no-store" }),
+        fetch(`/api/cardapio/variacoes?product_id=${produto.id}`, { cache: "no-store" }),
+        fetch(`/api/cardapio/produtos/${produto.id}/addons`, { cache: "no-store" })
       ])
       
       const optionsData = await optionsRes.json()
