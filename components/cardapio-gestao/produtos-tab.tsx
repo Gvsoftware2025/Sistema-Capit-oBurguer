@@ -31,8 +31,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toast } from "sonner"
-import { Plus, Pencil, Trash2, Loader2, Search, Upload, X, Settings2 } from "lucide-react"
-import { ConfiguradorProduto } from "@/components/cardapio-gestao/configurador-produto"
+import { Plus, Pencil, Trash2, Loader2, Search, Upload, X } from "lucide-react"
+import { VariacoesProdutoEditor } from "@/components/cardapio-gestao/variacoes-produto-editor"
 import { useRef } from "react"
 import { cn } from "@/lib/utils"
 import type { DbProduct, DbCategory } from "@/lib/db-types"
@@ -49,7 +49,6 @@ export function ProdutosTab() {
   const [modalAberto, setModalAberto] = useState(false)
   const [editando, setEditando] = useState<DbProduct | null>(null)
   const [excluindo, setExcluindo] = useState<DbProduct | null>(null)
-  const [configurando, setConfigurando] = useState<DbProduct | null>(null)
   const [salvando, setSalvando] = useState(false)
   const [busca, setBusca] = useState("")
   const [filtroCategoria, setFiltroCategoria] = useState<string>("todas")
@@ -322,9 +321,6 @@ export function ProdutosTab() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => setConfigurando(prod)} className="h-8 w-8" aria-label={`Configurar opções de ${prod.name}`}>
-                        <Settings2 className="h-4 w-4" />
-                      </Button>
                       <Button variant="ghost" size="icon" onClick={() => abrirEditar(prod)} className="h-8 w-8" aria-label={`Editar ${prod.name}`}>
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -349,7 +345,7 @@ export function ProdutosTab() {
 
       {/* Modal Criar/Editar */}
       <Dialog open={modalAberto} onOpenChange={setModalAberto}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editando ? "Editar Produto" : "Novo Produto"}</DialogTitle>
           </DialogHeader>
@@ -409,7 +405,7 @@ export function ProdutosTab() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="price">Preço *</Label>
+              <Label htmlFor="price">Preço base *</Label>
               <Input
                 id="price"
                 type="number"
@@ -418,7 +414,9 @@ export function ProdutosTab() {
                 onChange={(e) => setForm({ ...form, price: e.target.value })}
                 placeholder="0.00"
               />
+              <p className="text-xs text-muted-foreground">Se o produto tiver tamanhos, ajuste os preços deles abaixo.</p>
             </div>
+            {editando && <VariacoesProdutoEditor productId={editando.id} />}
             <div className="space-y-2">
               <Label>Imagem do Produto</Label>
               <input
@@ -491,14 +489,6 @@ export function ProdutosTab() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {configurando && (
-        <ConfiguradorProduto
-          product={configurando}
-          open={!!configurando}
-          onOpenChange={(open) => !open && setConfigurando(null)}
-        />
-      )}
 
       {/* Confirmação de exclusão */}
       <AlertDialog open={!!excluindo} onOpenChange={() => setExcluindo(null)}>
